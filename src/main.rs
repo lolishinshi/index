@@ -9,11 +9,10 @@ use cmd::cmd_show_feature;
 use config::*;
 
 async fn run() -> Result<()> {
-    let x = vectordb::connect("uri").await;
     let config = Config::parse();
     match config.command {
         Command::ShowFeature(cmd) => {
-           cmd_show_feature(cmd)?;
+            cmd_show_feature(cmd)?;
         }
     }
     Ok(())

@@ -24,12 +24,12 @@ impl KeyPointSelector for SccFilter {
         width: usize,
         height: usize,
     ) -> Vector<KeyPoint> {
-        scc(keypoints, num_points, self.0, width as u32, height as u32)
+        ssc(keypoints, num_points, self.0, width as u32, height as u32)
     }
 }
 
 // 注：tolerance 为选择的点的数量与理想数量的容差，默认 0.1
-pub fn scc(
+pub fn ssc(
     keypoints: Vector<KeyPoint>,
     num_ret_points: u32,
     tolerance: f32,
@@ -70,7 +70,7 @@ pub fn scc(
         let c = width / 2.0;
         let num_cell_cols = (cols as f32 / c).floor() as usize;
         let num_cell_rows = (rows as f32 / c).floor() as usize;
-        let mut covered_vec = vec![vec![false; num_cell_cols]; num_cell_rows];
+        let mut covered_vec = vec![vec![false; num_cell_cols + 1]; num_cell_rows + 1];
         result.clear();
 
         for keypoint in &keypoints {
@@ -80,9 +80,9 @@ pub fn scc(
             if !covered_vec[row][col] {
                 result.push(keypoint);
                 // get range which current radius is covering
-                let row_min = (row - (width / c).floor() as usize).max(0);
+                let row_min = row.saturating_sub((width / c).floor() as usize);
                 let row_max = (row + (width / c).floor() as usize).min(num_cell_rows);
-                let col_min = (col - (width / c).floor() as usize).max(0);
+                let col_min = col.saturating_sub((width / c).floor() as usize);
                 let col_max = (col + (width / c).floor() as usize).min(num_cell_cols);
                 covered_vec
                     .iter_mut()

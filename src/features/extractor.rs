@@ -1,4 +1,4 @@
-use super::KeyPointSelector;
+use super::{KeyPointSelector, SccFilter};
 use anyhow::Result;
 use opencv::core::{KeyPoint, Vector};
 use opencv::features2d::{GFTTDetector, SIFT};
