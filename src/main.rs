@@ -20,7 +20,6 @@ async fn run() -> Result<()> {
 
 #[tokio::main]
 async fn main() {
-    let db = db::IndexDB::new();
     if let Err(err) = run().await {
         eprintln!("Error: {}", err);
     }

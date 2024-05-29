@@ -1,11 +1,32 @@
+use std::marker::PhantomData;
 use usearch::{b1x8, new_index, Index, IndexOptions, MetricKind, ScalarKind};
 
-pub struct IndexDB {
-    index: Index,
+use crate::features::OrbFeatureDescriptor;
+
+trait BinaryVector {
+    const SIZE: usize;
+
+    fn to_bit_vec(&self) -> Vec<b1x8>;
 }
 
-impl IndexDB {
-    pub fn new() -> IndexDB {
+impl BinaryVector for OrbFeatureDescriptor {
+    const SIZE: usize = 256;
+
+    fn to_bit_vec(&self) -> Vec<b1x8> {
+        todo!()
+    }
+}
+
+pub struct IndexDB<T> {
+    index: Index,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> IndexDB<T>
+where
+    T: BinaryVector,
+{
+    pub fn new() -> IndexDB<T> {
         let options = IndexOptions {
             dimensions: 256,
             metric: MetricKind::Hamming,
@@ -13,11 +34,14 @@ impl IndexDB {
             ..Default::default()
         };
         let index = new_index(&options).unwrap();
-        Self { index }
+        Self {
+            index,
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn add_vector(&self, key: u64, vector: &[u8]) {
-        let vector = vector.into_iter().map(|v| b1x8(*v)).collect::<Vec<_>>();
+    pub fn add_vector(&self, key: u64, vector: &T) {
+        let vector = vector.to_bit_vec();
         self.index.add(key, &vector).unwrap();
     }
 }

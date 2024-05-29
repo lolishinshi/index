@@ -1,29 +1,39 @@
-use super::{KeyPointSelector, SccFilter};
+use super::{FeatureExtractor, KeyPointSelector, SccFilter};
 use anyhow::Result;
-use opencv::core::{KeyPoint, Vector};
+use opencv::core::{KeyPoint, Ptr, Vector};
+use opencv::features2d::{FastFeatureDetector, ORB};
 use opencv::prelude::*;
 
-pub struct FeatureExtractor<D, E, S> {
+pub struct OrbFeatureDescriptor(Mat);
+
+pub struct OrbFeatureExtractor<D, E, S> {
     detector: D,
     computer: E,
     selector: S,
 }
 
-impl<D, E, S> FeatureExtractor<D, E, S>
-where
-    D: Feature2DTrait,
-    E: Feature2DTrait,
-    S: KeyPointSelector,
-{
-    pub fn new(detector: D, computer: E, selector: S) -> Self {
+impl OrbFeatureExtractor<Ptr<FastFeatureDetector>, Ptr<ORB>, SccFilter> {
+    pub fn new() -> Self {
+        let detector = FastFeatureDetector::create_def().unwrap();
+        let computer = ORB::create_def().unwrap();
+        let selector = SccFilter::default();
         Self {
             detector,
             computer,
             selector,
         }
     }
+}
 
-    pub fn detect(&mut self, image: &Mat, num_points: u32) -> Result<Vector<KeyPoint>> {
+impl<D, S, E> FeatureExtractor for OrbFeatureExtractor<D, E, S>
+where
+    D: Feature2DTrait,
+    E: Feature2DTrait,
+    S: KeyPointSelector,
+{
+    type Descriptor = OrbFeatureDescriptor;
+
+    fn detect(&mut self, image: &Mat, num_points: u32) -> Result<Vector<KeyPoint>> {
         let mut keypoints = Vector::new();
         let mask = Mat::default();
         self.detector.detect(image, &mut keypoints, &mask)?;
@@ -37,11 +47,11 @@ where
         Ok(keypoints)
     }
 
-    pub fn detect_and_compute(
+    fn detect_and_compute(
         &mut self,
         image: &Mat,
         num_points: u32,
-    ) -> Result<(Vector<KeyPoint>, Mat)> {
+    ) -> Result<(Vector<KeyPoint>, Vec<Self::Descriptor>)> {
         let mut keypoints = self.detect(image, num_points)?;
         let mut descriptors = Mat::default();
         self.computer

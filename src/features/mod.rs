@@ -1,10 +1,26 @@
 mod anms;
 mod extractor;
 
-use opencv::core::{KeyPoint, Vector};
+use anyhow::Result;
+use opencv::{
+    core::{KeyPoint, Vector},
+    prelude::*,
+};
 
 pub use anms::SccFilter;
-pub use extractor::FeatureExtractor;
+pub use extractor::*;
+
+pub trait FeatureExtractor {
+    type Descriptor;
+
+    fn detect(&mut self, image: &Mat, num_points: u32) -> Result<Vector<KeyPoint>>;
+
+    fn detect_and_compute(
+        &mut self,
+        image: &Mat,
+        num_points: u32,
+    ) -> Result<(Vector<KeyPoint>, Vec<Self::Descriptor>)>;
+}
 
 pub trait KeyPointSelector {
     fn select(
