@@ -18,4 +18,6 @@ pub struct ShowFeatureCommand {
     pub image: String,
     #[clap(short, long, default_value = "500")]
     pub num_points: u32,
+    #[clap(short, long, default_value = "feature.png")]
+    pub output: String,
 }

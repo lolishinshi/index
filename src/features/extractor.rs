@@ -1,7 +1,6 @@
 use super::{KeyPointSelector, SccFilter};
 use anyhow::Result;
 use opencv::core::{KeyPoint, Vector};
-use opencv::features2d::{GFTTDetector, SIFT};
 use opencv::prelude::*;
 
 pub struct FeatureExtractor<D, E, S> {

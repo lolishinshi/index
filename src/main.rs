@@ -1,7 +1,7 @@
 mod cmd;
 mod config;
+mod db;
 mod features;
-mod utils;
 
 use anyhow::Result;
 use clap::Parser;
@@ -20,6 +20,7 @@ async fn run() -> Result<()> {
 
 #[tokio::main]
 async fn main() {
+    let db = db::IndexDB::new();
     if let Err(err) = run().await {
         eprintln!("Error: {}", err);
     }
