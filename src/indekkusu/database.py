@@ -1,10 +1,13 @@
 import plyvel
 import numpy as np
 import io
+from tqdm import tqdm
 from typing import Generator
 from collections import defaultdict
 from usearch.index import Index, MetricKind, ScalarKind, BatchMatches
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+
 
 __all__ = ["IndexkusuDB"]
 
@@ -16,7 +19,9 @@ _idx_prefix = b"/idx"
 
 class VectorDB:
     def __init__(self, db_dir: Path):
-        self.db = plyvel.DB(str(db_dir / "leveldb"), create_if_missing=True)
+        self.db = plyvel.DB(
+            str(db_dir / "leveldb"), create_if_missing=True, compression=None
+        )
 
     def get_key(self, image: bytes) -> int | None:
         """
@@ -73,14 +78,14 @@ class IndexkusuDB:
 
         # TODO: connectivity expansion_add expansion_search 参数怎么设置
         self.index = Index(
-            ndim=256, metric=MetricKind.Hamming, dtype=ScalarKind.B1, multi=True
+            ndim=256,
+            metric=MetricKind.Hamming,
+            dtype=ScalarKind.B1,
+            multi=True,
+            path=db_dir / "db.usearch",
+            view=view,
+            enable_key_lookups=False,
         )
-        self.index_file = db_dir / "db.usearch"
-        if self.index_file.exists():
-            if view:
-                self.index.load(self.index_file)
-            else:
-                self.index.view(self.index_file)
         self.vdb = VectorDB(db_dir)
 
     def has_image(self, image: str) -> bool:
@@ -96,6 +101,15 @@ class IndexkusuDB:
         if descriptors is None:
             return
         self.vdb.add_image(image.encode(), descriptors)
+
+    def build_index(self, threads: int = 1):
+        """
+        构建索引
+        """
+        for key, vector in tqdm(self.vdb.vectors()):
+            keys = np.array([key] * vector.shape[0], dtype=np.int32)
+            self.index.add(keys, vector, copy=False)
+        self.index.save()
 
 
 # https://www.jianshu.com/p/4d2b45918958

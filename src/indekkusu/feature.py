@@ -23,7 +23,7 @@ class FeatureExtractor:
         return ssc(keys, limit, self.tolerance, img.shape[1], img.shape[0])
 
     def detect_and_compute(
-        self, img: MatLike, limit: int = 500, resize: int | None = 1280
+        self, img: MatLike, limit: int = 500, resize: int | None = 960
     ) -> tuple[MatLike, list[KeyPoint], MatLike]:
         """
         提取图片的特征点和描述子，返回缩放后的图片、特征点、描述子

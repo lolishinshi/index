@@ -1,11 +1,12 @@
 import re
+from multiprocessing import Pool
+from pathlib import Path
+
 import cv2
 import click
 from indekkusu.feature import FeatureExtractor
 from indekkusu.database import IndexkusuDB
-from pathlib import Path
 from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from loguru import logger
 
 
@@ -59,20 +60,43 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
     db = IndexkusuDB(db_dir)
 
     image_iter = iter([path]) if path.is_file() else path.rglob("*")
-    image_list = [
+    image_list = (
         image
         for image in image_iter
         if image.is_file()
         and re_pattern.match(image.name)
         and not db.has_image(str(image))
-    ]
+    )
 
-    extractor = FeatureExtractor()
+    with Pool(threads) as pool:
+        results = pool.imap_unordered(extract_descriptor, image_list, chunksize=1024)
+        for image, desc in tqdm(results):
+            db.add_image(str(image), desc)
 
-    for image in tqdm(image_list):
-        img = cv2.imread(str(image))
-        _, _, desc = extractor.detect_and_compute(img)
-        db.add_image(str(image), desc)
+
+def extract_descriptor(image: Path):
+    img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
+    ft = FeatureExtractor()
+    _, _, desc = ft.detect_and_compute(img)
+    return image, desc
+
+
+@cli.command()
+@click.option(
+    "-d",
+    "--db-dir",
+    default="index.db",
+    type=click.Path(path_type=Path),
+    show_default=True,
+    help="数据库目录",
+)
+def build_index(db_dir: Path):
+    """
+    构建索引
+    """
+    db = IndexkusuDB(db_dir)
+    db.build_index()
+
 
 @cli.command()
 @click.option("--show", is_flag=True, help="展示结果图片，不进行保存")
@@ -99,6 +123,7 @@ def detect(image: str, show: bool, output: str):
             pass
     else:
         cv2.imwrite(output, img)
+
 
 if __name__ == "__main__":
     cli()
