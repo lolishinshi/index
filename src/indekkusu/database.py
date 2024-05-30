@@ -21,6 +21,13 @@ _idx_prefix = b"/idx"
 
 
 class VectorDB:
+    """
+    VectorDB 维护以下关系：
+    - 图片编号 -> 图片地址
+    - 图片地址 -> 图片编号
+    - 图片编号 -> 描述子
+    """
+
     def __init__(self, db_dir: Path):
         self.db = plyvel.DB(
             str(db_dir / "leveldb"), create_if_missing=True, compression=None
