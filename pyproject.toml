@@ -6,11 +6,11 @@ authors = [{ name = "Aloxaf", email = "aloxafx@gmail.com" }]
 dependencies = [
     "click>=8.1.7",
     "opencv-python>=4.9.0.80",
-    "pillow>=10.3.0",
     "tqdm>=4.66.4",
     "usearch>=2.12.0",
     "plyvel>=1.5.1",
     "loguru>=0.7.2",
+    "blake3>=0.4.1",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

@@ -1,17 +1,19 @@
+import io
+from collections import defaultdict
+from pathlib import Path
+from datetime import datetime
+
 import plyvel
 import numpy as np
-import io
 from tqdm import tqdm
 from typing import Generator
 from loguru import logger
-from collections import defaultdict
 from usearch.index import Index, MetricKind, ScalarKind, BatchMatches
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
 
 
 __all__ = ["IndexkusuDB"]
 
+# TODO: 是否应该记录图片的哈希，这样可以避免重复添加图片
 _image_prefix = b"/image"
 _key_prefix = b"/key"
 _vector_prefix = b"/vector"
@@ -82,12 +84,11 @@ class IndexkusuDB:
             ndim=256,
             metric=MetricKind.Hamming,
             dtype=ScalarKind.B1,
-            multi=True,
             path=db_dir / "db.usearch",
             view=view,
             enable_key_lookups=False,
         )
-        logger.info(self.index)
+        print(self.index.__repr_pretty__())
         self.vdb = VectorDB(db_dir)
 
     def has_image(self, image: str) -> bool:
@@ -109,13 +110,40 @@ class IndexkusuDB:
         构建索引
         """
         for key, vector in tqdm(self.vdb.vectors()):
-            keys = np.array([key] * vector.shape[0], dtype=np.int32)
+            # usearch 向量 id 的类型是 u32
+            # 这里取前 22 bit 存放图片 id，后 10 bit 存放描述子 id
+            # 理论上可以容纳 420 万张图片，每张图片 1000 个特征点
+            keys = key << 10 | np.arange(0, vector.shape[0], dtype=np.uint32)
             self.index.add(keys, vector, threads=threads, copy=False)
         self.index.save()
 
+    def search_image(
+        self, descriptors: np.ndarray, topk: int = 10
+    ) -> list[tuple[float, str]]:
+        """
+        根据描述子搜索相似图片
+        """
+        now = datetime.now()
+        matches: BatchMatches = self.index.search(descriptors, topk)
+        logger.info(f"search time: {(datetime.now() - now).microseconds / 1000}ms")
+        now = datetime.now()
+
+        match_count = defaultdict(list)
+        for keys, distances in zip(matches.keys, matches.distances):
+            for key, distance in zip(keys, distances):
+                key = int(key)
+                image = self.vdb.get_image(key >> 10)
+                match_count[image].append((256 - distance) / 256)
+
+        scores = [(wilson_score(np.array(v)), k) for k, v in match_count.items()]
+        scores.sort(key=lambda x: x[0], reverse=True)
+        logger.info(f"sort time: {(datetime.now() - now).microseconds / 1000}ms")
+
+        return scores[:topk]
+
 
 # https://www.jianshu.com/p/4d2b45918958
-def wilson_score(scores: np.ndarray):
+def wilson_score(scores: np.ndarray) -> float:
     mean = np.mean(scores)
     var = np.var(scores)
     total = len(scores)
@@ -125,7 +153,7 @@ def wilson_score(scores: np.ndarray):
         + (np.square(p_z) / (2.0 * total))
         - ((p_z / (2.0 * total)) * np.sqrt(4.0 * total * var + np.square(p_z)))
     ) / (1 + np.square(p_z) / total)
-    return score
+    return round(score * 100, 2)
 
 
 def numpy_loadb(b: bytes) -> np.ndarray:

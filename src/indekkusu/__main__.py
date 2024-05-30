@@ -20,18 +20,19 @@ def cli():
     "-d",
     "--db-dir",
     default="index.db",
-    type=click.Path(exists=True),
+    type=click.Path(path_type=Path),
     show_default=True,
     help="数据库目录",
 )
 @click.option("-n", "--limit", default=10, show_default=True, help="返回结果数量")
 @click.argument("image", type=click.Path(exists=True))
-def search(image: str, db_dir: str, limit: int = 10):
-    db = IndexkusuDB(db_dir)
+def search(image: str, db_dir: Path, limit: int):
+    db = IndexkusuDB(db_dir, view=True)
     img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
     ft = FeatureExtractor()
     _, _, desc = ft.detect_and_compute(img)
-    db.search_image(desc)
+    for score, image in db.search_image(desc, limit):
+        print(score, image)
 
 
 @cli.command()
@@ -76,6 +77,8 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
 
 def extract_descriptor(image: Path):
     img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        return None, None
     ft = FeatureExtractor()
     _, _, desc = ft.detect_and_compute(img)
     return image, desc
@@ -90,12 +93,13 @@ def extract_descriptor(image: Path):
     show_default=True,
     help="数据库目录",
 )
-def build_index(db_dir: Path):
+@click.option("-t", "--threads", default=1, show_default=True, help="并发线程数")
+def build_index(db_dir: Path, threads: int):
     """
     构建索引
     """
     db = IndexkusuDB(db_dir)
-    db.build_index()
+    db.build_index(threads=threads)
 
 
 @cli.command()
