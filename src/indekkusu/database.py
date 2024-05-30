@@ -3,6 +3,7 @@ import numpy as np
 import io
 from tqdm import tqdm
 from typing import Generator
+from loguru import logger
 from collections import defaultdict
 from usearch.index import Index, MetricKind, ScalarKind, BatchMatches
 from pathlib import Path
@@ -86,6 +87,7 @@ class IndexkusuDB:
             view=view,
             enable_key_lookups=False,
         )
+        logger.info(self.index)
         self.vdb = VectorDB(db_dir)
 
     def has_image(self, image: str) -> bool:
@@ -108,7 +110,7 @@ class IndexkusuDB:
         """
         for key, vector in tqdm(self.vdb.vectors()):
             keys = np.array([key] * vector.shape[0], dtype=np.int32)
-            self.index.add(keys, vector, copy=False)
+            self.index.add(keys, vector, threads=threads, copy=False)
         self.index.save()
 
 
