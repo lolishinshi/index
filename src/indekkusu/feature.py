@@ -18,6 +18,8 @@ class FeatureExtractor:
         提取图片的特征点，返回特征点列表
         """
         keys = self.ds.detect(img)
+        if len(keys) <= limit:
+            return keys
         return ssc(keys, limit, self.tolerance, img.shape[1], img.shape[0])
 
     def detect_and_compute(

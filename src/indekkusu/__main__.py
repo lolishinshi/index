@@ -5,6 +5,8 @@ from indekkusu.feature import FeatureExtractor
 from indekkusu.database import IndexkusuDB
 from pathlib import Path
 from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from loguru import logger
 
 
 @click.group()
@@ -14,17 +16,18 @@ def cli():
 
 @cli.command()
 @click.option(
+    "-d",
     "--db-dir",
     default="index.db",
     type=click.Path(exists=True),
     show_default=True,
     help="数据库目录",
 )
-@click.option("--limit", default=10, show_default=True, help="返回结果数量")
+@click.option("-n", "--limit", default=10, show_default=True, help="返回结果数量")
 @click.argument("image", type=click.Path(exists=True))
 def search(image: str, db_dir: str, limit: int = 10):
     db = IndexkusuDB(db_dir)
-    img = cv2.imread(image)
+    img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
     ft = FeatureExtractor()
     _, _, desc = ft.detect_and_compute(img)
     db.search_image(desc)
@@ -32,48 +35,49 @@ def search(image: str, db_dir: str, limit: int = 10):
 
 @cli.command()
 @click.option(
+    "-r",
     "--regexp",
     default=".*(jpg|png|jpeg)$",
     show_default=True,
     help="匹配文件名的正则表达式（大小写不敏感）",
 )
 @click.option(
+    "-d",
     "--db-dir",
     default="index.db",
     type=click.Path(path_type=Path),
     show_default=True,
     help="数据库目录",
 )
+@click.option("-t", "--threads", default=1, show_default=True, help="并发线程数")
 @click.argument("PATH", type=click.Path(exists=True, path_type=Path))
-def add(db_dir: Path, path: Path, regexp: str):
+def add(db_dir: Path, path: Path, regexp: str, threads: int):
     """
-    索引一张图片或者一个文件夹中的所有图片
+    计算并存储一张图片或者一个文件夹中的所有图片的特征点
     """
     re_pattern = re.compile(regexp, re.IGNORECASE)
+    db = IndexkusuDB(db_dir)
 
-    if path.is_file():
-        images = iter([path])
-    else:
-        images = path.glob("*")
+    image_iter = iter([path]) if path.is_file() else path.rglob("*")
+    image_list = [
+        image
+        for image in image_iter
+        if image.is_file()
+        and re_pattern.match(image.name)
+        and not db.has_image(str(image))
+    ]
 
-    if not db_dir.exists():
-        db_dir.mkdir(parents=True)
+    extractor = FeatureExtractor()
 
-    db = IndexkusuDB(str(db_dir))
-
-    for image in tqdm(images):
-        if image.is_file() and re_pattern.match(image.name):
-            img = cv2.imread(str(image))
-            ft = FeatureExtractor()
-            _, _, desc = ft.detect_and_compute(img)
-            db.add_image(str(image), desc)
-
-    db.close()
-
+    for image in tqdm(image_list):
+        img = cv2.imread(str(image))
+        _, _, desc = extractor.detect_and_compute(img)
+        db.add_image(str(image), desc)
 
 @cli.command()
 @click.option("--show", is_flag=True, help="展示结果图片，不进行保存")
 @click.option(
+    "-",
     "--output",
     default="output.png",
     type=click.Path(),
@@ -85,7 +89,7 @@ def detect(image: str, show: bool, output: str):
     """
     提取一张图片中的特征点并展示
     """
-    img = cv2.imread(image)
+    img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
     ft = FeatureExtractor()
     img, keys, _ = ft.detect_and_compute(img)
     img = cv2.drawKeypoints(img, keys, None)
@@ -95,7 +99,6 @@ def detect(image: str, show: bool, output: str):
             pass
     else:
         cv2.imwrite(output, img)
-
 
 if __name__ == "__main__":
     cli()

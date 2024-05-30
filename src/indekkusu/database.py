@@ -1,69 +1,101 @@
-import os
 import plyvel
 import numpy as np
+import io
+from typing import Generator
 from collections import defaultdict
 from usearch.index import Index, MetricKind, ScalarKind, BatchMatches
+from pathlib import Path
+
+__all__ = ["IndexkusuDB"]
+
+_image_prefix = b"/image"
+_key_prefix = b"/key"
+_vector_prefix = b"/vector"
+_idx_prefix = b"/idx"
+
+
+class VectorDB:
+    def __init__(self, db_dir: Path):
+        self.db = plyvel.DB(str(db_dir / "leveldb"), create_if_missing=True)
+
+    def get_key(self, image: bytes) -> int | None:
+        """
+        在数据库中查找图片的编号，如果不存在则返回 None
+        """
+        key = b"%b/%b" % (_image_prefix, image)
+        if value := self.db.get(key):
+            return int.from_bytes(value, "big")
+        return None
+
+    def get_image(self, key: int) -> bytes | None:
+        """
+        在数据库中查找图片地址，如果不存在则返回 None
+        """
+        bkey = b"%b/%b" % (_key_prefix, key.to_bytes(4, "big"))
+        if value := self.db.get(bkey):
+            return value.decode()
+        return None
+
+    def add_image(self, image: bytes, descriptors: np.ndarray):
+        """
+        添加一张图片及其描述子到数据库中
+        """
+        key = self.get_key(image)
+        with self.db.write_batch() as wb:
+            if key:
+                key_bytes = key.to_bytes(4, "big")
+            else:
+                key_bytes = (
+                    self.db.get(b"%b/image" % _idx_prefix) or b"\x00\x00\x00\x00"
+                )
+                key = int.from_bytes(key_bytes, "big")
+                wb.put(b"%b/image" % _idx_prefix, (key + 1).to_bytes(4, "big"))
+            wb.put(b"%b/%b" % (_image_prefix, image), key_bytes)
+            wb.put(b"%b/%b" % (_key_prefix, key_bytes), image)
+            wb.put(b"%b/%b" % (_vector_prefix, key_bytes), numpy_dumpb(descriptors))
+
+    def vectors(self, start: int = 0) -> Generator[tuple[int, np.ndarray], None, None]:
+        """
+        遍历数据库中的所有描述子
+        """
+        start_bytes = start.to_bytes(4, "big")
+        with self.db.iterator(
+            start=b"%b/%b" % (_vector_prefix, start_bytes), include_start=True
+        ) as it:
+            for key, value in it:
+                yield int.from_bytes(key[8:], "big"), numpy_loadb(value)
 
 
 class IndexkusuDB:
-    def __init__(self, db_dir: str):
+    def __init__(self, db_dir: Path, view: bool = False):
+        if not db_dir.exists():
+            db_dir.mkdir(parents=True)
+
         # TODO: connectivity expansion_add expansion_search 参数怎么设置
         self.index = Index(
             ndim=256, metric=MetricKind.Hamming, dtype=ScalarKind.B1, multi=True
         )
-        if os.path.exists(f"{db_dir}/db.usearch"):
-            self.index.load(f"{db_dir}/db.usearch")
-        self.image_db = plyvel.DB(f"{db_dir}/image.ldb", create_if_missing=True)
-        self.key_db = plyvel.DB(f"{db_dir}/key.ldb", create_if_missing=True)
-        self.db_dir = db_dir
+        self.index_file = db_dir / "db.usearch"
+        if self.index_file.exists():
+            if view:
+                self.index.load(self.index_file)
+            else:
+                self.index.view(self.index_file)
+        self.vdb = VectorDB(db_dir)
 
     def has_image(self, image: str) -> bool:
         """
         判断数据库中是否已经存在该图片
         """
-        return self.image_db.get(image.encode()) is not None
-
-    def _add_image(self, image: str) -> int:
-        """
-        添加图片路径到数据库中，返回图片的编号
-        """
-        with self.image_db.write_batch() as wb:
-            idx = self.image_db.get(b"__idx__")
-            if idx is None:
-                idx = b"0"
-            else:
-                idx = str(int(idx) + 1).encode()
-            wb.put(image.encode(), idx)
-            wb.put(b"__idx__", idx)
-        self.key_db.put(idx, image.encode())
-        return int(idx)
+        return self.vdb.get_key(image.encode()) is not None
 
     def add_image(self, image: str, descriptors: np.ndarray):
         """
         添加一张图片及其描述子到数据库中
         """
-        if self.has_image(image):
+        if descriptors is None:
             return
-        assert descriptors.shape[1] == 32
-        key = self._add_image(image)
-        keys = np.array([key] * descriptors.shape[0])
-        self.index.add(keys, descriptors, copy=False)
-
-    def search_image(self, descriptors: np.ndarray, limit: int = 10) -> list[str]:
-        matches: BatchMatches = self.index.search(descriptors, limit)
-        scores = defaultdict(list)
-        for keys, distances in zip(matches.keys, matches.distances):
-            for key, distance in zip(keys, distances):
-                scores[key].append((128 - distance) / 128)
-
-        scores = [(k, wilson_score(np.array(v))) for k, v in scores.items()]
-        scores.sort(key=lambda x: x[1], reverse=True)
-        for k, v in scores[:10]:
-            print(f"{self.key_db.get(str(k).encode())}: {v}")
-
-    def close(self):
-        self.index.save(f"{self.db_dir}/db.usearch")
-        self.image_db.close()
+        self.vdb.add_image(image.encode(), descriptors)
 
 
 # https://www.jianshu.com/p/4d2b45918958
@@ -78,3 +110,13 @@ def wilson_score(scores: np.ndarray):
         - ((p_z / (2.0 * total)) * np.sqrt(4.0 * total * var + np.square(p_z)))
     ) / (1 + np.square(p_z) / total)
     return score
+
+
+def numpy_loadb(b: bytes) -> np.ndarray:
+    return np.load(io.BytesIO(b), allow_pickle=False)
+
+
+def numpy_dumpb(a: np.ndarray) -> bytes:
+    with io.BytesIO() as f:
+        np.save(f, a, allow_pickle=False)
+        return f.getvalue()
