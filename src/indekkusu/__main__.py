@@ -78,9 +78,9 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
 
 def extract_descriptor(image: Path):
     img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
-    img = resize_image(img)
     if img is None:
         return None, None
+    img = resize_image(img)
     ft = FeatureExtractor()
     _, desc = ft.detect_and_compute(img)
     return image, desc
