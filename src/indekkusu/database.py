@@ -29,12 +29,10 @@ class VectorDB:
     """
 
     def __init__(self, db_dir: Path):
-        self.db = plyvel.DB(
-            str(db_dir / "image"), create_if_missing=True
-        )
+        self.db = plyvel.DB(str(db_dir / "image"), create_if_missing=True)
         self.vdb = plyvel.DB(
             str(db_dir / "vector"), create_if_missing=True, compression=None
-        )        
+        )
 
     def get_key(self, image: bytes) -> int | None:
         """
@@ -70,7 +68,9 @@ class VectorDB:
                 wb.put(b"%b/image" % _idx_prefix, (key + 1).to_bytes(4, "big"))
             wb.put(b"%b/%b" % (_image_prefix, image), key_bytes)
             wb.put(b"%b/%b" % (_key_prefix, key_bytes), image)
-            self.vdb.put(b"%b/%b" % (_vector_prefix, key_bytes), numpy_dumpb(descriptors))
+            self.vdb.put(
+                b"%b/%b" % (_vector_prefix, key_bytes), numpy_dumpb(descriptors)
+            )
 
     def vectors(self, start: int = 0) -> Generator[tuple[int, np.ndarray], None, None]:
         """

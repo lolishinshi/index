@@ -1,38 +1,75 @@
 import cv2
-from cv2 import KeyPoint, Feature2D, ORB, FastFeatureDetector
+import numpy as np
+from cv2 import KeyPoint, ORB
 from cv2.typing import MatLike
 from indekkusu.anms import ssc
 
 
 class FeatureExtractor:
-    ds: Feature2D
-    ft: Feature2D
-    tolerance = 0.1
+    def __init__(
+        self,
+        nfeatures: int = 500,
+        tolerance: float = 0.05,
+        scale_factor: float = 1.2,
+        nlevels: int = 8,
+    ):
+        """
+        初始化特征提取器
 
-    def __init__(self):
-        self.ds = FastFeatureDetector.create()
-        self.ft = ORB.create()
+        :param nfeatures: 最大特征点数量
+        :param tolerance: ANMS 算法的容差
+        :param scale_factor: 图像金字塔的缩放因子
+        :param nlevels: 图像金字塔的层数
+        """
+        self._ft = ORB.create(nfeatures=nfeatures * 10, nlevels=1)
+        self._nfeatures = nfeatures
+        self._tolerance = tolerance
+        self._scale_factor = scale_factor
+        self._nlevels = nlevels
 
-    def detect(self, img: MatLike, limit: int = 500) -> list[KeyPoint]:
-        """
-        提取图片的特征点，返回特征点列表
-        """
-        keys = self.ds.detect(img)
-        if len(keys) <= limit:
-            return keys
-        return ssc(keys, limit, self.tolerance, img.shape[1], img.shape[0])
+        self._scale_factors = scale_factor ** np.arange(nlevels)
+        self._inv_scale_factors = 1 / self._scale_factors
+        self._features_per_level = np.round(
+            nfeatures
+            * np.square(self._inv_scale_factors)
+            / np.linalg.norm(self._inv_scale_factors) ** 2
+        ).astype(np.int32)
 
-    def detect_and_compute(
-        self, img: MatLike, limit: int = 500, resize: int | None = 960
-    ) -> tuple[MatLike, list[KeyPoint], MatLike]:
+    def _compute_pyramid(self, img: MatLike) -> list[MatLike]:
         """
-        提取图片的特征点和描述子，返回缩放后的图片、特征点、描述子
+        计算图像金字塔
         """
-        if resize:
-            img = resize_image(img, resize)
-        keys = self.detect(img, limit)
-        _, desc = self.ft.compute(img, keys)
-        return img, keys, desc
+        pyramid = [img]
+        for i in range(1, self._nlevels):
+            nimg = cv2.resize(
+                img,
+                (0, 0),
+                fx=self._inv_scale_factors[i],
+                fy=self._inv_scale_factors[i],
+                interpolation=cv2.INTER_AREA,
+            )
+            # 参照 slam3 的算法修改 https://blog.csdn.net/weixin_45947476/article/details/123738789
+            cv2.imwrite(f"pyramid_{i}.png", nimg)
+            pyramid.append(nimg)
+        return pyramid
+
+    def detect_and_compute(self, img: MatLike) -> tuple[list[KeyPoint], np.array]:
+        """
+        提取图片的特征点和描述子
+        """
+        pyramid = self._compute_pyramid(img)
+        keypoints = []
+        descriptors = []
+        for i, img in enumerate(pyramid):
+            kp = self._ft.detect(img)
+            kp = ssc(kp, self._features_per_level[i], self._tolerance, img.shape[1], img.shape[0])
+            kp, desc = self._ft.compute(img, kp)
+            for k in kp:
+                k.pt = (k.pt[0] * self._scale_factors[i], k.pt[1] * self._scale_factors[i])
+                k.size *= self._scale_factors[i]
+            keypoints.extend(kp)
+            descriptors.append(desc)
+        return keypoints, np.vstack(descriptors)
 
 
 def resize_image(img: MatLike, width: int) -> MatLike:
@@ -40,6 +77,7 @@ def resize_image(img: MatLike, width: int) -> MatLike:
     将图片按照宽度等比例缩放
     """
     _, w = img.shape[:2]
+    # TODO: 大的要缩，小的要放
     if w <= width:
         return img
     scale = width / w

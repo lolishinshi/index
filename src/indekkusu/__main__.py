@@ -119,12 +119,13 @@ def detect(image: str, show: bool, output: str):
     """
     img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
     ft = FeatureExtractor()
-    img, keys, _ = ft.detect_and_compute(img)
+    keys, _ = ft.detect_and_compute(img)
+    print(len(keys))
     img = cv2.drawKeypoints(img, keys, None)
     if show:
         cv2.imshow("result", img)
-        while cv2.waitKey() != -1:
-            pass
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     else:
         cv2.imwrite(output, img)
 
