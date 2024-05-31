@@ -6,6 +6,7 @@ import cv2
 import click
 from indekkusu.feature import FeatureExtractor
 from indekkusu.database import IndexkusuDB
+from indekkusu.utils import resize_image
 from tqdm import tqdm
 from loguru import logger
 
@@ -77,10 +78,11 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
 
 def extract_descriptor(image: Path):
     img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
+    img = resize_image(img)
     if img is None:
         return None, None
     ft = FeatureExtractor()
-    _, _, desc = ft.detect_and_compute(img)
+    _, desc = ft.detect_and_compute(img)
     return image, desc
 
 
@@ -118,6 +120,7 @@ def detect(image: str, show: bool, output: str):
     提取一张图片中的特征点并展示
     """
     img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
+    img = resize_image(img)
     ft = FeatureExtractor()
     keys, _ = ft.detect_and_compute(img)
     print(len(keys))

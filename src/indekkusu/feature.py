@@ -49,7 +49,6 @@ class FeatureExtractor:
                 interpolation=cv2.INTER_AREA,
             )
             # 参照 slam3 的算法修改 https://blog.csdn.net/weixin_45947476/article/details/123738789
-            cv2.imwrite(f"pyramid_{i}.png", nimg)
             pyramid.append(nimg)
         return pyramid
 
@@ -71,14 +70,3 @@ class FeatureExtractor:
             descriptors.append(desc)
         return keypoints, np.vstack(descriptors)
 
-
-def resize_image(img: MatLike, width: int) -> MatLike:
-    """
-    将图片按照宽度等比例缩放
-    """
-    _, w = img.shape[:2]
-    # TODO: 大的要缩，小的要放
-    if w <= width:
-        return img
-    scale = width / w
-    return cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
