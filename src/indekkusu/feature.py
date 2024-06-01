@@ -61,6 +61,8 @@ class FeatureExtractor:
         descriptors = []
         for i, img in enumerate(pyramid):
             kp = self._ft.detect(img)
+            if len(kp) == 0:
+                continue
             kp = ssc(kp, self._features_per_level[i], self._tolerance, img.shape[1], img.shape[0])
             kp, desc = self._ft.compute(img, kp)
             for k in kp:
@@ -68,5 +70,7 @@ class FeatureExtractor:
                 k.size *= self._scale_factors[i]
             keypoints.extend(kp)
             descriptors.append(desc)
-        return keypoints, np.vstack(descriptors)
+        if len(keypoints) == 0:
+            return [], np.array([])
+        return keypoints, np.concatenate(descriptors)
 

@@ -31,7 +31,7 @@ def search(image: str, db_dir: Path, limit: int):
     db = IndexkusuDB(db_dir, view=True)
     img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
     ft = FeatureExtractor()
-    _, _, desc = ft.detect_and_compute(img)
+    _, desc = ft.detect_and_compute(img)
     for score, image in db.search_image(desc, limit):
         print(score, image)
 
@@ -73,13 +73,14 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
     with Pool(threads) as pool:
         results = pool.imap_unordered(extract_descriptor, image_list, chunksize=1024)
         for image, desc in tqdm(results):
-            db.add_image(str(image), desc)
+            if len(desc) != 0:
+                db.add_image(str(image), desc)
 
 
 def extract_descriptor(image: Path):
     img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
     if img is None:
-        return None, None
+        return None, []
     img = resize_image(img)
     ft = FeatureExtractor()
     _, desc = ft.detect_and_compute(img)
@@ -123,7 +124,7 @@ def detect(image: str, show: bool, output: str):
     img = resize_image(img)
     ft = FeatureExtractor()
     keys, _ = ft.detect_and_compute(img)
-    print(len(keys))
+    logger.info(f"Found {len(keys)} keypoints")    
     img = cv2.drawKeypoints(img, keys, None)
     if show:
         cv2.imshow("result", img)

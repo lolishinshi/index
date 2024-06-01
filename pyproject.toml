@@ -20,6 +20,8 @@ license = { text = "Apache-2.0" }
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
+[project.scripts]
+indekkusu = "indekkusu.__main__:cli"
 
 [tool.pdm]
 distribution = true
