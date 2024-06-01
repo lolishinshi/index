@@ -24,6 +24,10 @@ class FeatureExtractor:
         self._ft = ORB.create(nfeatures=nfeatures * 10, scaleFactor=scale_factor, nlevels=nlevels)
         self._tolerance = tolerance
         self._nfeatures = nfeatures
+        self._nlevels = nlevels
+
+        inv_scale_per_level = 1 / 1.2 ** np.arange(nlevels)
+        self._feature_per_level = np.round(nfeatures * inv_scale_per_level**2 / np.sum(inv_scale_per_level**2)).astype(np.int32)
 
     def detect_and_compute(self, img: MatLike) -> tuple[list[KeyPoint], np.array]:
         """

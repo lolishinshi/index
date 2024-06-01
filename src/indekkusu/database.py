@@ -84,6 +84,16 @@ class VectorDB:
                 yield int.from_bytes(key[8:], "big"), numpy_loadb(value)
 
 
+    def get_vector(self, key: int) -> np.ndarray | None:
+        """
+        获取指定图片的描述子
+        """
+        key_bytes = key.to_bytes(4, "big")
+        if value := self.vdb.get(b"%b/%b" % (_vector_prefix, key_bytes)):
+            return numpy_loadb(value)
+        return None
+
+
 class IndexkusuDB:
     def __init__(self, db_dir: Path, view: bool = False):
         if not db_dir.exists():
@@ -128,7 +138,7 @@ class IndexkusuDB:
         self.index.save()
 
     def search_image(
-        self, descriptors: np.ndarray, topk: int = 10
+        self, descriptors: np.ndarray, topk: int = 5
     ) -> list[tuple[float, str]]:
         """
         根据描述子搜索相似图片
@@ -157,7 +167,7 @@ def wilson_score(scores: np.ndarray) -> float:
     mean = np.mean(scores)
     var = np.var(scores)
     total = len(scores)
-    p_z = 2.32
+    p_z = 1.98
     score = (
         mean
         + (np.square(p_z) / (2.0 * total))

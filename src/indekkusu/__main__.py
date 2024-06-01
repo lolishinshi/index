@@ -29,9 +29,7 @@ def cli():
 @click.argument("image", type=click.Path(exists=True))
 def search(image: str, db_dir: Path, limit: int):
     db = IndexkusuDB(db_dir, view=True)
-    img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
-    ft = FeatureExtractor()
-    _, desc = ft.detect_and_compute(img)
+    _, _, _, desc = extract_descriptor(Path(image))
     for score, image in db.search_image(desc, limit):
         print(score, image)
 
@@ -72,7 +70,7 @@ def add(db_dir: Path, path: Path, regexp: str, threads: int):
 
     with Pool(threads) as pool:
         results = pool.imap_unordered(extract_descriptor, image_list, chunksize=1024)
-        for image, desc in tqdm(results):
+        for image, _,  _, desc in tqdm(results):
             if len(desc) != 0:
                 db.add_image(str(image), desc)
 
@@ -83,8 +81,8 @@ def extract_descriptor(image: Path):
         return None, []
     img = resize_image(img)
     ft = FeatureExtractor()
-    _, desc = ft.detect_and_compute(img)
-    return image, desc
+    kps, desc = ft.detect_and_compute(img)
+    return image, img, kps, desc
 
 
 @cli.command()
@@ -132,6 +130,22 @@ def detect(image: str, show: bool, output: str):
         cv2.destroyAllWindows()
     else:
         cv2.imwrite(output, img)
+
+
+@cli.command()
+@click.argument("image1", type=click.Path(exists=True))
+@click.argument("image2", type=click.Path(exists=True))
+def match(image1: str, image2: str):
+    """
+    尝试匹配两张图片
+    """
+    _, img1, kp1, des1 = extract_descriptor(image1)
+    _, img2, kp2, des2 = extract_descriptor(image2)
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+    matches = sorted(matches, key=lambda x: x.distance)
+    img3 = cv2.drawMatches(img1, kp1, img2, kp2, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    cv2.imwrite("output.png", img3)
 
 
 if __name__ == "__main__":

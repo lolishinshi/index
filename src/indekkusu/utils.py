@@ -9,6 +9,6 @@ def resize_image(img: MatLike, width: int = 960) -> MatLike:
     _, w = img.shape[:2]
     scale = width / w
     if w <= width:
-        return cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        return img
     else:
         return cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
