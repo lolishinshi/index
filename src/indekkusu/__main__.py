@@ -125,7 +125,7 @@ def detect(image: str, show: bool, output: str):
     ft = FeatureExtractor()
     keys, _ = ft.detect_and_compute(img)
     logger.info(f"Found {len(keys)} keypoints")    
-    img = cv2.drawKeypoints(img, keys, None)
+    img = cv2.drawKeypoints(img, keys, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     if show:
         cv2.imshow("result", img)
         cv2.waitKey(0)
