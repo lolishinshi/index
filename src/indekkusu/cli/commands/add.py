@@ -3,8 +3,8 @@ import itertools
 from pathlib import Path
 
 import click
-import tqdm
 import numpy as np
+from tqdm import tqdm
 from indekkusu.database import IndexkusuDB
 from indekkusu.feature import FeatureExtractor
 from .base import cli, click_db_dir
@@ -32,7 +32,7 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
         images = iter([path])
     else:
         images = itertools.chain.from_iterable(
-            path.rglob(g, case_sensitive=False) for g in glob
+            path.rglob(g) for g in glob
         )
 
     with multiprocessing.Pool(threads) as pool:

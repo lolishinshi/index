@@ -2,7 +2,7 @@ from pathlib import Path
 
 import click
 from indekkusu.database import IndexkusuDB
-from indekkusu.feature import FastFeatureDetector
+from indekkusu.feature import FeatureExtractor
 from .base import cli, click_db_dir
 from ..utils import load_image
 
@@ -14,6 +14,6 @@ from ..utils import load_image
 def search(image: str, db_dir: Path, limit: int):
     db = IndexkusuDB(db_dir, view=True)
     img = load_image(image)
-    desc = FastFeatureDetector().detect_and_compute(img)
+    desc = FeatureExtractor().detect_and_compute(img)
     for score, image in db.search_image(desc, limit):
         print(score, image)

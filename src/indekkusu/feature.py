@@ -1,8 +1,9 @@
-import cv2
 import numpy as np
-from cv2 import KeyPoint, ORB, FastFeatureDetector
+from cv2 import KeyPoint, ORB
 from cv2.typing import MatLike
 from indekkusu.anms import ssc
+
+__all__ = ["FeatureExtractor"]
 
 
 class FeatureExtractor:
@@ -40,6 +41,16 @@ class FeatureExtractor:
         kps = self._ft.detect(img)
         if len(kps) == 0:
             return [], np.array([])
-        kps = ssc(kps, self._nfeatures, self._tolerance, img.shape[1], img.shape[0])
+        if len(kps) >= self._nfeatures:
+            if True:
+                kp_per_level = [[] for _ in range(self._nlevels)]
+                for kp in kps:
+                    kp_per_level[kp.octave].append(kp)
+                for i, kps in enumerate(kp_per_level):
+                    if len(kps) >= self._feature_per_level[i]:
+                        kp_per_level[i] = ssc(kps, self._feature_per_level[i], self._tolerance, img.shape[1], img.shape[0])
+                kps = [kp for kps in kp_per_level for kp in kps]
+            else:
+                kps = ssc(kps, self._nfeatures, self._tolerance, img.shape[1], img.shape[0])
         kps, desc = self._ft.compute(img, kps)
         return kps, desc
