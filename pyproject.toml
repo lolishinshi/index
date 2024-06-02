@@ -25,3 +25,8 @@ indekkusu = "indekkusu.cli:cli"
 
 [tool.pdm]
 distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "prettytable>=3.10.0",
+]

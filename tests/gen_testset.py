@@ -3,19 +3,10 @@ from pathlib import Path
 
 import cv2
 import click
-from tqdm import tqdm
 from cv2.typing import MatLike
-from indekkusu.database import IndexkusuDB
-from indekkusu.cli.commands.base import click_db_dir
-from indekkusu.feature import FeatureExtractor
 
 
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
+@click.command()
 @click.argument("source", type=click.Path(exists=True, path_type=Path))
 @click.argument("dest", type=click.Path(path_type=Path))
 @click.option("-s", "--scale", default=1.0, show_default=True, help="缩放比例")
@@ -37,42 +28,10 @@ def gen_search(source: Path, dest: Path, scale: float, m: int, n: int, count: in
         img = cv2.imread(str(image))
         if img is None:
             continue
-        img = cv2.resize(img, (0, 0), fx=scale, fy=scale)
+        img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
         parts = split_image(img, m, n)
         for i, part in enumerate(parts):
             cv2.imwrite(str(dest / f"{image.stem}_{i}{image.suffix}"), part)
-
-
-@cli.command()
-@click_db_dir
-@click.argument("search", type=click.Path(exists=True, path_type=Path))
-def gen_report(db_dir: Path, search: Path):
-    """
-    生成搜索效果检测报告
-    """
-    db = IndexkusuDB(db_dir)
-    ft = FeatureExtractor()
-
-    for testset in search.iterdir():
-        print(f"Testset: {testset.name}")
-
-        stats = {"success": 0, "total": 0}
-        for image in tqdm(testset.glob("*.*")):
-            img = cv2.imread(str(image))
-            if img is None:
-                continue
-            _, desc = ft.detect_and_compute(img)
-            if len(desc) == 0:
-                continue
-            try:
-                result = db.search_image(desc, 3)
-                if image.stem.startswith(Path(result[0][1]).stem):
-                    stats["success"] += 1
-                stats["total"] += 1
-            except:
-                print(f"Error: {image}")
-
-        print(stats)
 
 
 def split_image(image: MatLike, m: int, n: int) -> list[MatLike]:
@@ -91,4 +50,4 @@ def split_image(image: MatLike, m: int, n: int) -> list[MatLike]:
 
 
 if __name__ == "__main__":
-    cli()
+    gen_search()
