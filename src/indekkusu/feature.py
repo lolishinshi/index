@@ -11,7 +11,7 @@ class FeatureExtractor:
         self,
         nfeatures: int = 500,
         tolerance: float = 0.05,
-        scale_factor: float = 1.2,
+        scale_factor: float = 1.15,
         nlevels: int = 8,
     ):
         """

@@ -65,7 +65,7 @@ def gen_report(db_dir: Path, search: Path):
             if len(desc) == 0:
                 continue
             try:
-                result = db.search_image(desc)
+                result = db.search_image(desc, 3)
                 if image.stem.startswith(Path(result[0][1]).stem):
                     stats["success"] += 1
                 stats["total"] += 1
