@@ -83,7 +83,6 @@ class VectorDB:
             for key, value in it:
                 yield int.from_bytes(key[8:], "big"), numpy_loadb(value)
 
-
     def get_vector(self, key: int) -> np.ndarray | None:
         """
         获取指定图片的描述子

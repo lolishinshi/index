@@ -21,13 +21,17 @@ class FeatureExtractor:
         :param scale_factor: 图像金字塔的缩放因子
         :param nlevels: 图像金字塔的层数
         """
-        self._ft = ORB.create(nfeatures=nfeatures * 10, scaleFactor=scale_factor, nlevels=nlevels)
+        self._ft = ORB.create(
+            nfeatures=nfeatures * 10, scaleFactor=scale_factor, nlevels=nlevels
+        )
         self._tolerance = tolerance
         self._nfeatures = nfeatures
         self._nlevels = nlevels
 
         inv_scale_per_level = 1 / 1.2 ** np.arange(nlevels)
-        self._feature_per_level = np.round(nfeatures * inv_scale_per_level**2 / np.sum(inv_scale_per_level**2)).astype(np.int32)
+        self._feature_per_level = np.round(
+            nfeatures * inv_scale_per_level**2 / np.sum(inv_scale_per_level**2)
+        ).astype(np.int32)
 
     def detect_and_compute(self, img: MatLike) -> tuple[list[KeyPoint], np.array]:
         """
@@ -39,4 +43,3 @@ class FeatureExtractor:
         kps = ssc(kps, self._nfeatures, self._tolerance, img.shape[1], img.shape[0])
         kps, desc = self._ft.compute(img, kps)
         return kps, desc
-

@@ -21,7 +21,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project.scripts]
-indekkusu = "indekkusu.__main__:cli"
+indekkusu = "indekkusu.cli:cli"
 
 [tool.pdm]
 distribution = true
