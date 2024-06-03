@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:92ddc9fd08aba2b1c3cf251d11e6cc8067eedf543102e7901b74fe1078dbaafb"
+content_hash = "sha256:0d3f7a5e59749ef0c23753a44384776b770a09e17b789ca6d5b0ee540688c199"
 
 [[package]]
 name = "blake3"
@@ -55,6 +55,20 @@ marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+
+[[package]]
+name = "faiss"
+version = "1.8.0"
+path = "/home/aloxaf/Coding/C++/faiss/build/faiss/python/dist/faiss-1.8.0-py3-none-linux_x86_64.whl"
+summary = "A library for efficient similarity search and clustering of dense vectors"
+groups = ["default"]
+dependencies = [
+    "numpy",
+    "packaging",
+]
+files = [
+    {file = "faiss-1.8.0-py3-none-linux_x86_64.whl", hash = "sha256:0af3d9146dc0e9a0042d24dff366c6b1f2679e3121ee03e101ac67a14ae2c47a"},
 ]
 
 [[package]]
@@ -136,15 +150,23 @@ files = [
 ]
 
 [[package]]
-name = "plyvel"
-version = "1.5.1"
-summary = "Plyvel, a fast and feature-rich Python interface to LevelDB"
+name = "packaging"
+version = "24.0"
+requires_python = ">=3.7"
+summary = "Core utilities for Python packages"
 groups = ["default"]
 files = [
-    {file = "plyvel-1.5.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8394aed946000fca2c92d7ae8537d9907c8169debf7f55c7ecb53751f3bf4e7"},
-    {file = "plyvel-1.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:54f364f566470f5acaed0a00fea8860736120a711214190a17ee73dcbe1a2261"},
-    {file = "plyvel-1.5.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8b26b09d6ae9c679c877153aa4bd7f763e5e983a61b7c0c955653e7a494b6126"},
-    {file = "plyvel-1.5.1.tar.gz", hash = "sha256:3caf6009e4fc24fbf8712d3f5ef3da7e56495c26a488df2161218fc34e46019c"},
+    {file = "packaging-24.0-py3-none-any.whl", hash = "sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5"},
+    {file = "packaging-24.0.tar.gz", hash = "sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9"},
+]
+
+[[package]]
+name = "peewee"
+version = "3.17.5"
+summary = "a little orm"
+groups = ["default"]
+files = [
+    {file = "peewee-3.17.5.tar.gz", hash = "sha256:e1b6a64192207fd3ddb4e1188054820f42aef0aadfa749e3981af3c119a76420"},
 ]
 
 [[package]]
