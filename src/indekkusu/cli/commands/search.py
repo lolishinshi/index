@@ -14,6 +14,6 @@ from ..utils import load_image
 def search(image: str, db_dir: Path, limit: int):
     db = IndexkusuDB(db_dir, view=True)
     img = load_image(image)
-    desc = FeatureExtractor().detect_and_compute(img)
+    _, desc = FeatureExtractor().detect_and_compute(img)
     for score, image in db.search_image(desc, limit):
         print(score, image)

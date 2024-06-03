@@ -150,12 +150,13 @@ class IndexkusuDB:
         match_count = defaultdict(list)
         for keys, distances in zip(matches.keys, matches.distances):
             for key, distance in zip(keys, distances):
-                key = int(key)
-                image = self.vdb.get_image(key >> 10)
-                match_count[image].append((256 - distance) / 256)
+                key = int(key) >> 10
+                match_count[key].append((256 - distance) / 256)
 
         scores = [(wilson_score(np.array(v)), k) for k, v in match_count.items()]
         scores.sort(key=lambda x: x[0], reverse=True)
+        scores = scores[:topk]
+        scores = [(score, self.vdb.get_image((key))) for score, key in scores]
         #logger.info(f"sort time: {(datetime.now() - now).microseconds / 1000}ms")
 
         return scores[:topk]

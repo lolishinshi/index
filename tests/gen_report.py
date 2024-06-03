@@ -27,7 +27,7 @@ def gen_report(db_dir: Path, search: Path):
 
         stats = {"success": 0, "total": 0}
         for image in tqdm(testset.glob("*.*")):
-            img = cv2.imread(str(image))
+            img = cv2.imread(str(image), cv2.IMREAD_GRAYSCALE)
             if img is None:
                 continue
             _, desc = ft.detect_and_compute(img)
