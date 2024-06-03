@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 import click
 import cv2
 from tqdm import tqdm

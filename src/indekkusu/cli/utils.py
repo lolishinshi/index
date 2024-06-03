@@ -15,13 +15,13 @@ def load_image(image: Path | str) -> MatLike | None:
     return img
 
 
-def resize_image(img: MatLike, width: int = 960) -> MatLike:
+def resize_image(img: MatLike, width: int = 1080, height: int = 1920) -> MatLike:
     """
     将图片按照宽度等比例缩放
     """
-    _, w = img.shape[:2]
-    if w <= width:
+    h, w = img.shape[:2]
+    if w <= width and h <= height:
         return img
     else:
-        scale = width / w
+        scale = min(width / w, height / h)
         return cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_AREA)

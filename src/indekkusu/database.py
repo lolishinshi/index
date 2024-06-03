@@ -142,10 +142,10 @@ class IndexkusuDB:
         """
         根据描述子搜索相似图片
         """
-        #now = datetime.now()
+        # now = datetime.now()
         matches: BatchMatches = self.index.search(descriptors, topk)
-        #logger.info(f"search time: {(datetime.now() - now).microseconds / 1000}ms")
-        #now = datetime.now()
+        # logger.info(f"search time: {(datetime.now() - now).microseconds / 1000}ms")
+        # now = datetime.now()
 
         match_count = defaultdict(list)
         for keys, distances in zip(matches.keys, matches.distances):
@@ -157,7 +157,7 @@ class IndexkusuDB:
         scores.sort(key=lambda x: x[0], reverse=True)
         scores = scores[:topk]
         scores = [(score, self.vdb.get_image((key))) for score, key in scores]
-        #logger.info(f"sort time: {(datetime.now() - now).microseconds / 1000}ms")
+        # logger.info(f"sort time: {(datetime.now() - now).microseconds / 1000}ms")
 
         return scores[:topk]
 

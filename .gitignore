@@ -163,3 +163,4 @@ cython_debug/
 
 index.db
 tests/dataset
+.idea

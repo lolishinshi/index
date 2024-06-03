@@ -31,9 +31,7 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
     if path.is_file():
         images = iter([path])
     else:
-        images = itertools.chain.from_iterable(
-            path.rglob(g) for g in glob
-        )
+        images = itertools.chain.from_iterable(path.rglob(g) for g in glob)
 
     with multiprocessing.Pool(threads) as pool:
         results = pool.imap_unordered(detect_and_compute, images, chunksize=1024)
