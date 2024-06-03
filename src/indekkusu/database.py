@@ -14,10 +14,10 @@ from usearch.index import Index, MetricKind, ScalarKind, BatchMatches
 __all__ = ["IndexkusuDB"]
 
 # TODO: 是否应该记录图片的哈希，这样可以避免重复添加图片
-_image_prefix = b"/image"
-_key_prefix = b"/key"
-_vector_prefix = b"/vector"
-_idx_prefix = b"/idx"
+P_IMAGE = b"/image"
+P_KEY = b"/key"
+P_VECTOR = b"/vector"
+P_IDX = b"/idx"
 
 
 class VectorDB:
@@ -38,7 +38,7 @@ class VectorDB:
         """
         在数据库中查找图片的编号，如果不存在则返回 None
         """
-        key = b"%b/%b" % (_image_prefix, image)
+        key = b"%b/%b" % (P_IMAGE, image)
         if value := self.db.get(key):
             return int.from_bytes(value, "big")
         return None
@@ -47,7 +47,7 @@ class VectorDB:
         """
         在数据库中查找图片地址，如果不存在则返回 None
         """
-        bkey = b"%b/%b" % (_key_prefix, key.to_bytes(4, "big"))
+        bkey = b"%b/%b" % (P_KEY, key.to_bytes(4, "big"))
         if value := self.db.get(bkey):
             return value.decode()
         return None
@@ -61,16 +61,12 @@ class VectorDB:
             if key:
                 key_bytes = key.to_bytes(4, "big")
             else:
-                key_bytes = (
-                    self.db.get(b"%b/image" % _idx_prefix) or b"\x00\x00\x00\x00"
-                )
+                key_bytes = self.db.get(b"%b/image" % P_IDX) or b"\x00\x00\x00\x00"
                 key = int.from_bytes(key_bytes, "big")
-                wb.put(b"%b/image" % _idx_prefix, (key + 1).to_bytes(4, "big"))
-            wb.put(b"%b/%b" % (_image_prefix, image), key_bytes)
-            wb.put(b"%b/%b" % (_key_prefix, key_bytes), image)
-            self.vdb.put(
-                b"%b/%b" % (_vector_prefix, key_bytes), numpy_dumpb(descriptors)
-            )
+                wb.put(b"%b/image" % P_IDX, (key + 1).to_bytes(4, "big"))
+            wb.put(b"%b/%b" % (P_IMAGE, image), key_bytes)
+            wb.put(b"%b/%b" % (P_KEY, key_bytes), image)
+            self.vdb.put(b"%b/%b" % (P_VECTOR, key_bytes), numpy_dumpb(descriptors))
 
     def vectors(self, start: int = 0) -> Generator[tuple[int, np.ndarray], None, None]:
         """
@@ -78,7 +74,7 @@ class VectorDB:
         """
         start_bytes = start.to_bytes(4, "big")
         with self.vdb.iterator(
-            start=b"%b/%b" % (_vector_prefix, start_bytes), include_start=True
+            start=b"%b/%b" % (P_VECTOR, start_bytes), include_start=True
         ) as it:
             for key, value in it:
                 yield int.from_bytes(key[8:], "big"), numpy_loadb(value)
@@ -88,7 +84,7 @@ class VectorDB:
         获取指定图片的描述子
         """
         key_bytes = key.to_bytes(4, "big")
-        if value := self.vdb.get(b"%b/%b" % (_vector_prefix, key_bytes)):
+        if value := self.vdb.get(b"%b/%b" % (P_VECTOR, key_bytes)):
             return numpy_loadb(value)
         return None
 
