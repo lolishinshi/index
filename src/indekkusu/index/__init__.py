@@ -1,1 +1,1 @@
-from .index import IndexTrainer
+from .FaissIndexTrainer import FaissIndexTrainer

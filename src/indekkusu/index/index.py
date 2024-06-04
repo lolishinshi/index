@@ -1,44 +1,44 @@
-from pathlib import Path
-
 import faiss
 import numpy as np
 from loguru import logger
 
-from .base import Indexer
 
-
-class IndexTrainer:
-    d = 256
-
-    def __init__(self, db_dir: Path, max_size: int):
-        # 参考 https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
-        if max_size <= 1e6:
-            k = 8 * np.sqrt(max_size).astype(int)
-            description = f"BIVF{k}"
+class FaissIndex:
+    def __init__(self, path: str, mmap: bool = False):
+        """
+        加载索引
+        """
+        if mmap:
+            io_flags = faiss.IO_FLAG_READ_ONLY | faiss.IO_FLAG_MMAP
         else:
-            k = 2 ** (np.log10(max_size).astype(int) * 2 + 2)
-            description = f"BIVF{k}_HNSW32"
-        self.db_dir = db_dir
-        self.k = int(k)
-        self.description = description
-        self.index: faiss.IndexBinaryIVF = faiss.index_binary_factory(self.d, description)
-        self.index.verbose = True
-        self.index.cp.verbose = True
+            io_flags = 0
+        self.path = path
+        self.index: faiss.IndexBinaryIVF = faiss.read_index_binary(path, io_flags)
 
-    def train(self, vectors: np.ndarray):
+    def imbalance(self) -> float:
         """
-        训练索引
+        当前索引的不平衡度，1 为绝对平均
         """
-        self.index.train(vectors)
+        arr = np.array([self.index.get_list_size(i) for i in range(self.index.nlist)])
+        uf = np.sum(arr.astype(np.float64) ** 2)
+        tot = np.sum(arr).astype(np.float64)
+        return float(uf * len(arr) / tot**2)
 
-    def train_gpu(self, vectors: np.ndarray):
+    def add(self, key: int, vectors: np.ndarray):
         """
-        使用 GPU 训练索引
+        添加图片的特征点向量
         """
-        clustering_index = faiss.index_cpu_to_all_gpus(faiss.IndexFlatL2(self.d))
-        self.index.clustering_index = clustering_index
-        self.index.train(vectors)
 
-    def save(self):
-        path = self.db_dir / f"{self.description}.train"
-        faiss.write_index_binary(self.index, str(path))
+
+# https://www.jianshu.com/p/4d2b45918958
+def wilson_score(scores: np.ndarray) -> float:
+    mean = np.mean(scores)
+    var = np.var(scores)
+    total = len(scores)
+    p_z = 1.98
+    score = (
+        mean
+        + (np.square(p_z) / (2.0 * total))
+        - ((p_z / (2.0 * total)) * np.sqrt(4.0 * total * var + np.square(p_z)))
+    ) / (1 + np.square(p_z) / total)
+    return round(score * 100, 2)

@@ -1,7 +1,7 @@
-from peewee import fn
 from typing import Generator
 
 import numpy as np
+from peewee import fn
 
 from ..vector import Vector
 
