@@ -19,7 +19,8 @@ from .base import cli, click_db_dir
 @click.option(
     "-n", default=50, show_default=True, help="使用多少倍的特征点训练索引，推荐 30~256"
 )
-def train_index(db_dir: Path, image_num: int, feature_num: int, n: int):
+@click.option("--gpu", is_flag=True, help="使用 GPU 训练索引")
+def train_index(db_dir: Path, image_num: int, feature_num: int, n: int, gpu: bool):
     """
     构建索引
     """
@@ -29,6 +30,9 @@ def train_index(db_dir: Path, image_num: int, feature_num: int, n: int):
     logger.info("创建索引 {}", trainer.description)
     vectors = crud.vector.sample(n * trainer.k // feature_num)
     logger.info("采样 {}/{} 向量，开始训练", len(vectors), n * trainer.k)
-    trainer.train(vectors)
+    if gpu:
+        trainer.train_gpu(vectors)
+    else:
+        trainer.train(vectors)
     logger.info("训练完成")
     trainer.save()
