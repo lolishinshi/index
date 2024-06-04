@@ -1,1 +1,1 @@
-from .FaissIndexTrainer import FaissIndexTrainer
+from .train import FaissIndexTrainer

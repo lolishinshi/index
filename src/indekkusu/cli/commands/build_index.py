@@ -1,8 +1,7 @@
 from pathlib import Path
 
 import click
-
-from indekkusu.index.FaissIndexTrainer import FaissIndexTrainer
+from indekkusu.index.train import FaissIndexTrainer
 
 from .base import cli, click_db_dir
 
