@@ -22,13 +22,21 @@ class IndexTrainer:
         self.k = int(k)
         self.description = description
         self.index: faiss.IndexBinaryIVF = faiss.index_binary_factory(self.d, description)
+        self.index.verbose = True
+        self.index.cp.verbose = True
 
     def train(self, vectors: np.ndarray):
         """
         训练索引
         """
-        self.index.verbose = True
-        self.index.cp.verbose = True
+        self.index.train(vectors)
+
+    def train_gpu(self, vectors: np.ndarray):
+        """
+        使用 GPU 训练索引
+        """
+        clustering_index = faiss.index_cpu_to_all_gpus(faiss.IndexFlatL2(self.d))
+        self.index.clustering_index = clustering_index
         self.index.train(vectors)
 
     def save(self):
