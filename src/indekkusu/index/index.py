@@ -7,32 +7,30 @@ from loguru import logger
 from .base import Indexer
 
 
-class FaisssIndexer(Indexer):
-    def __init__(self, db_dir: Path, view: bool = False, max_size: int = 0):
-        self.db_dir = db_dir
-        self.index: faiss.IndexBinaryIVF = faiss.index_binary_factory(
-            256, "BIVF1048576_HNSW32"
-        )
+class IndexTrainer:
+    d = 256
 
-    def train(self, max_size: int, vectors: np.ndarray):
-        """
-        根据最大容量训练索引
-
-        参考 https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
-        """
+    def __init__(self, db_dir: Path, max_size: int):
+        # 参考 https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
         if max_size <= 1e6:
             k = 8 * np.sqrt(max_size).astype(int)
             description = f"BIVF{k}"
         else:
             k = 2 ** (np.log10(max_size).astype(int) * 2 + 2)
             description = f"BIVF{k}_HNSW32"
-        logger.info("创建索引，类型为 {}", description)
-        self.index = faiss.index_binary_factory(256, description)
-        self.index.verbose = True
-        self.index.train(vectors)
-        logger.info("训练完成")
-        self.save(f"{description}.train")
+        self.db_dir = db_dir
+        self.k = int(k)
+        self.description = description
+        self.index: faiss.IndexBinaryIVF = faiss.index_binary_factory(self.d, description)
 
-    def save(self, filename: str):
-        path = str(self.db_dir / filename)
-        faiss.write_index_binary(self.index, path)
+    def train(self, vectors: np.ndarray):
+        """
+        训练索引
+        """
+        self.index.verbose = True
+        self.index.cp.verbose = True
+        self.index.train(vectors)
+
+    def save(self):
+        path = self.db_dir / f"{self.description}.train"
+        faiss.write_index_binary(self.index, str(path))
