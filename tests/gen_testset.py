@@ -1,8 +1,8 @@
 import random
 from pathlib import Path
 
-import cv2
 import click
+import cv2
 from cv2.typing import MatLike
 
 

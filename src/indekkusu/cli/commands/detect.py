@@ -1,9 +1,11 @@
 import click
 import cv2
 from loguru import logger
+
 from indekkusu.feature import FeatureExtractor
-from .base import cli
+
 from ..utils import load_image
+from .base import cli
 
 
 @cli.command()

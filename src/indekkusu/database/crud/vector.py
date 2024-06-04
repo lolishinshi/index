@@ -2,6 +2,7 @@ import io
 from typing import Generator
 
 import numpy as np
+
 from ..vector import Vector
 
 __all__ = ["create", "iter_by"]
@@ -11,7 +12,7 @@ def create(key: int, vector: np.ndarray) -> None:
     """
     创建一个向量记录
     """
-    Vector.create(key=key, vector=vector)
+    Vector.create(id=key, vector=vector)
 
 
 def iter_by(start: int, end: int) -> Generator[Vector, None, None]:

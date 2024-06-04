@@ -1,10 +1,11 @@
 from pathlib import Path
 
 import click
-from indekkusu.database import IndexkusuDB
+
 from indekkusu.feature import FeatureExtractor
-from .base import cli, click_db_dir
+
 from ..utils import load_image
+from .base import cli, click_db_dir
 
 
 @cli.command()

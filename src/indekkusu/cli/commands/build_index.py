@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import click
-from indekkusu.database import IndexkusuDB
+
 from .base import cli, click_db_dir
 
 

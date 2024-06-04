@@ -1,7 +1,7 @@
 from playhouse.sqliteq import SqliteQueueDatabase
+
 from .base import db
 from .models import Image
-
 
 __all__ = ["Image", "connect"]
 
@@ -16,3 +16,4 @@ def connect(path: str):
         },
     )
     db.initialize(database)
+    database.create_tables([Image])

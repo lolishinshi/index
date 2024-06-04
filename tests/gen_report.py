@@ -2,11 +2,12 @@ from pathlib import Path
 
 import click
 import cv2
-from tqdm import tqdm
 from prettytable import PrettyTable
+from tqdm import tqdm
+
+from indekkusu.cli.commands.base import click_db_dir
 from indekkusu.database import IndexkusuDB
 from indekkusu.feature import FeatureExtractor
-from indekkusu.cli.commands.base import click_db_dir
 
 
 @click.command()

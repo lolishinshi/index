@@ -1,7 +1,9 @@
 from pathlib import Path
 
-from .metadata import connect as connect_metadata, Image
-from .vector import connect as connect_vector, Vector
+from .metadata import Image
+from .metadata import connect as connect_metadata
+from .vector import Vector
+from .vector import connect as connect_vector
 
 __all__ = ["Image", "Vector", "connect"]
 

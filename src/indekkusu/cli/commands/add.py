@@ -1,14 +1,20 @@
-import multiprocessing
 import itertools
+import queue
+from multiprocessing import Process, Queue
 from pathlib import Path
+from threading import Thread
+from typing import Iterator
 
 import click
 import numpy as np
+from loguru import logger
 from tqdm import tqdm
-from indekkusu.database import IndexkusuDB
+
+from indekkusu.database import connect, crud
 from indekkusu.feature import FeatureExtractor
-from .base import cli, click_db_dir
+
 from ..utils import load_image
+from .base import cli, click_db_dir
 
 
 @cli.command()
@@ -24,28 +30,68 @@ from ..utils import load_image
 @click.argument("PATH", type=click.Path(exists=True, path_type=Path))
 def add(db_dir: Path, path: Path, glob: list[str], threads: int):
     """
-    计算并存储一张图片或者递归一个文件夹中的所有图片的特征点
+    计算并存储一个文件夹中的所有图片的特征点
     """
-    db = IndexkusuDB(db_dir)
+    connect(str(db_dir))
 
-    if path.is_file():
-        images = iter([path])
-    else:
-        images = itertools.chain.from_iterable(path.rglob(g) for g in glob)
+    total = sum(sum(1 for _ in path.rglob(g)) for g in glob)
+    images = itertools.chain.from_iterable(path.rglob(g) for g in glob)
 
-    with multiprocessing.Pool(threads) as pool:
-        results = pool.imap_unordered(detect_and_compute, images, chunksize=1024)
-        for image, desc in tqdm(results):
-            if len(desc) != 0:
-                db.add_image(str(image), desc)
+    input = Queue(maxsize=threads * 2)
+    output = Queue()
+
+    for _ in range(threads):
+        Process(target=calc_process, args=(input, output)).start()
+
+    t1 = Thread(target=feed_thread, args=(input, images, threads))
+    t2 = Thread(target=write_thread, args=(output, threads, total))
+    t1.start()
+    t2.start()
+
+    t2.join()
 
 
-ft = FeatureExtractor()
+def calc_process(input: Queue, output: Queue):
+    ft = FeatureExtractor()
+
+    while True:
+        try:
+            key, image = input.get(timeout=1)
+            if key == -1:
+                break
+
+            img = load_image(image)
+            if img is None:
+                logger.warning("无法读取图片 {}", image)
+                continue
+
+            _, des = ft.detect_and_compute(img)
+            if len(des) == 0:
+                logger.warning("无法提取特征点 {}", image)
+                continue
+
+            output.put((key, des))
+        except queue.Empty:
+            continue
+
+    output.put((-1, np.array([])))
 
 
-def detect_and_compute(image: Path) -> tuple[Path, np.ndarray]:
-    img = load_image(image)
-    if img is None:
-        return image, np.array([])
-    _, des = ft.detect_and_compute(img)
-    return image, des
+def feed_thread(input: Queue, images: Iterator[Path], threads: int):
+    for image in images:
+        if key := crud.image.create(str(image)):
+            input.put((key, image))
+    for _ in range(threads):
+        input.put((-1, Path()))
+
+
+def write_thread(output: Queue, threads: int, total: int):
+    exit_threads = 0
+    with tqdm(total=total) as bar:
+        while exit_threads != threads:
+            key, des = output.get()
+            if key == -1:
+                exit_threads += 1
+            else:
+                crud.vector.create(key, des)
+                bar.update()

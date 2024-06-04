@@ -1,5 +1,5 @@
-import numpy as np
 import cv2
+import numpy as np
 from cv2.typing import MatLike
 from python_orb_slam3 import ORBExtractor
 

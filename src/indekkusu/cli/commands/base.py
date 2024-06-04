@@ -2,7 +2,6 @@ from pathlib import Path
 
 import click
 
-
 click_db_dir = click.option(
     "-d",
     "--db-dir",

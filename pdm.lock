@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:0d3f7a5e59749ef0c23753a44384776b770a09e17b789ca6d5b0ee540688c199"
+content_hash = "sha256:067ea9bf5d01f3d404c3cb57d6c6c295b80faf0c912420ffed2a08e7e40516f5"
 
 [[package]]
 name = "blake3"
@@ -58,17 +58,31 @@ files = [
 ]
 
 [[package]]
-name = "faiss"
+name = "faiss-cpu"
 version = "1.8.0"
-path = "/home/aloxaf/Coding/C++/faiss/build/faiss/python/dist/faiss-1.8.0-py3-none-linux_x86_64.whl"
-summary = "A library for efficient similarity search and clustering of dense vectors"
+requires_python = ">=3.8"
+summary = "A library for efficient similarity search and clustering of dense vectors."
 groups = ["default"]
 dependencies = [
     "numpy",
-    "packaging",
 ]
 files = [
-    {file = "faiss-1.8.0-py3-none-linux_x86_64.whl", hash = "sha256:0af3d9146dc0e9a0042d24dff366c6b1f2679e3121ee03e101ac67a14ae2c47a"},
+    {file = "faiss-cpu-1.8.0.tar.gz", hash = "sha256:3ee1549491728f37b65267c192a94661a907154a8ae0546ad50a564b8be0d82e"},
+    {file = "faiss_cpu-1.8.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:134a064c7411acf7d1d863173a9d2605c5a59bd573639ab39a5ded5ca983b1b2"},
+    {file = "faiss_cpu-1.8.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:ba8e6202d561ac57394c9d691ff17f8fa6eb9a077913a993fce0a154ec0176f1"},
+    {file = "faiss_cpu-1.8.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a66e9fa7b70556a39681f06e0652f4124c8ddb0a1924afe4f0e40b6924dc845b"},
+    {file = "faiss_cpu-1.8.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:51aaef5a1255d0ea88ea7e52a2415f98c5dd2dd9cec10348d55136541eeec99f"},
+    {file = "faiss_cpu-1.8.0-cp310-cp310-win_amd64.whl", hash = "sha256:38152761242870ec7019e0397cbd0ed0b0716562029ce41a71bb38448bd6d5bc"},
+    {file = "faiss_cpu-1.8.0-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:c9e6ad94b86626be1a0faff3e53c4ca169eba88aa156d7e90c5a2e9ba30558fb"},
+    {file = "faiss_cpu-1.8.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4601dbd81733bf1bc3bff690aac981289fb386dc8e60d0c4eec8a37ba6856d20"},
+    {file = "faiss_cpu-1.8.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fa943d3b5e8c5c77cdd629d9c3c6f78d7da616e586fdd1b94aecbf2e5fa9ba06"},
+    {file = "faiss_cpu-1.8.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b644b366c3b239b34fa3e08bf65bfc78a24eda1e1ea5b2b6d9be3e8fc73d8179"},
+    {file = "faiss_cpu-1.8.0-cp311-cp311-win_amd64.whl", hash = "sha256:f85ecf3514850f93985be238351f5a70736133cfae784b372640aa17c6343a1b"},
+    {file = "faiss_cpu-1.8.0-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:61abc0129a357ac00f17f5167f14dff41480de2cc852f306c3d4cd36b893ccbd"},
+    {file = "faiss_cpu-1.8.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b788186d6eb94e6333e1aa8bb6c84b66e967458ecdd1cee22e16f04c43ee674c"},
+    {file = "faiss_cpu-1.8.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5658d90a202c62e4a69c5b065785e9ddcaf6986cb395c16afed8dbe4c58c31a2"},
+    {file = "faiss_cpu-1.8.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d460a372efce547e53d3c47d2c2a8a90b186ad245969048c10c1d7a1e5cf21b"},
+    {file = "faiss_cpu-1.8.0-cp312-cp312-win_amd64.whl", hash = "sha256:9e6520324f0a6764dd267b3c32c76958bf2b1ec36752950f6fab31a7295980a0"},
 ]
 
 [[package]]
@@ -150,17 +164,6 @@ files = [
 ]
 
 [[package]]
-name = "packaging"
-version = "24.0"
-requires_python = ">=3.7"
-summary = "Core utilities for Python packages"
-groups = ["default"]
-files = [
-    {file = "packaging-24.0-py3-none-any.whl", hash = "sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5"},
-    {file = "packaging-24.0.tar.gz", hash = "sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9"},
-]
-
-[[package]]
 name = "peewee"
 version = "3.17.5"
 summary = "a little orm"
@@ -221,45 +224,6 @@ dependencies = [
 files = [
     {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
     {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
-]
-
-[[package]]
-name = "usearch"
-version = "2.12.0"
-summary = "Smaller & Faster Single-File Vector Search Engine from Unum"
-groups = ["default"]
-dependencies = [
-    "numpy",
-    "tqdm",
-]
-files = [
-    {file = "usearch-2.12.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:58b29fc5fa20c7cdd6cd8261f39fedaffd03061601c1624b33a80bdfb29a6844"},
-    {file = "usearch-2.12.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:61e1d186f066507a230ca27e24eaeb051a901b3c5293c2c155f08f534a19d248"},
-    {file = "usearch-2.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:28b8901b615a548c8ade2662e9051de9420c34a2d1a8c91d2ba11edb0c3db14f"},
-    {file = "usearch-2.12.0-cp310-cp310-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7ba988719adb424caa786be318dfdbf1c44b066368f6eee99cf2f424b5f25091"},
-    {file = "usearch-2.12.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:a7e01373688bd7503868fc506b84765ce59cce65828d613147c0ee05241bdf9b"},
-    {file = "usearch-2.12.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:c24c0046d17a36f636f7a96f8b812dd7a40ef8b0cbec12fb8fdf2fa5be4a37cc"},
-    {file = "usearch-2.12.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:88367f82ef931b98a8c9b1759dff69ac63dc8ef759ee73d2e7f5fdedca02f21b"},
-    {file = "usearch-2.12.0-cp310-cp310-win_amd64.whl", hash = "sha256:50380710ad6eb730ab1927b919e206c765fe2eb869444ceba80dc7a81a5fd656"},
-    {file = "usearch-2.12.0-cp310-cp310-win_arm64.whl", hash = "sha256:a5edbaef570b084ec1db9d9669329c860bd4a72128efd5867eb93dd2bdc6d23c"},
-    {file = "usearch-2.12.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:4af0d62027425d1d02ef29ee5072501d8395ec6532079aa7834d11b8eaf5972f"},
-    {file = "usearch-2.12.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:e91962e35738772ad7f6d15ca5cb9cb6b425a71a7fc9c7e495ce3783742a7df7"},
-    {file = "usearch-2.12.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1bb80d3a6a16adad876088d18eadb9a50b40a4331e0f76a0bbbccd7d577d8016"},
-    {file = "usearch-2.12.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3ed2f229d2d80be82a09bd4b580c30e3a89228cfd295a3d9faa07b5c02a4aa10"},
-    {file = "usearch-2.12.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:3ffe8e866d08fc7fc92148e81d96862893e23c260a45b73e81e19140870d0480"},
-    {file = "usearch-2.12.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:3fd47c8ef364f54a4737d64e905c5b0031ec8fbecd399cd41d2945819b67a269"},
-    {file = "usearch-2.12.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:117bcebdab14057b9ac228a346af5dff65cfe0a780e1398e999ac20def6488e3"},
-    {file = "usearch-2.12.0-cp311-cp311-win_amd64.whl", hash = "sha256:522627dc95764ab70122db838a66807034183c1a6d26dcd5ed38fdd9e7d24beb"},
-    {file = "usearch-2.12.0-cp311-cp311-win_arm64.whl", hash = "sha256:58f027c2eeeabd75e235cbad2c479b1eea8a751453d5b2580955cdedaec20de1"},
-    {file = "usearch-2.12.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:ac653eb025f75b59a75ef3b7da58c0a1139aca9d0d8c8af2554511ddb1c371e6"},
-    {file = "usearch-2.12.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:ebc5ad46be372b98ef4f667a8cd3df47647de88dc0ee5435cf94195e148e8202"},
-    {file = "usearch-2.12.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a0f2165b6427ed240f4277655ab754a67d3ed47bcbf2ea717c80e4ead095503a"},
-    {file = "usearch-2.12.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b20bb4905a21efff7f391306d33a2ffc5bef647cf710c0b562b27b2c1dbe4b51"},
-    {file = "usearch-2.12.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:48de7f35c1c7d259c35f6d1779ab773811126feec363c8ada5c0efa7cfe0e54b"},
-    {file = "usearch-2.12.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:f0e8b79b2dc4a322037eb904a240e7628e9d801a9d0d431e50a3b534c08c91a6"},
-    {file = "usearch-2.12.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:d0290c15fc4b441ef148feb398c1d94d6f4db5dbd4f51b8a77d37938656c3c85"},
-    {file = "usearch-2.12.0-cp312-cp312-win_amd64.whl", hash = "sha256:542469e287208cdd9b29c192de726d3bca7cb070dfe772a7b76b3e50ce4dbbf4"},
-    {file = "usearch-2.12.0-cp312-cp312-win_arm64.whl", hash = "sha256:f3ee8bf67606479d5f453dd2bbdb331a1681e5f21cc5329109d04c83661b20d1"},
 ]
 
 [[package]]

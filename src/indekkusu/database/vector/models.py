@@ -1,7 +1,8 @@
 import io
 
 import numpy as np
-from peewee import IntegerField, BlobField
+from peewee import BlobField, IntegerField
+
 from .base import db
 
 
@@ -16,5 +17,5 @@ class NDArrayField(BlobField):
 
 
 class Vector(db.Model):
-    id = IntegerField()
+    id = IntegerField(primary_key=True)
     vector = NDArrayField()
