@@ -14,6 +14,7 @@ def connect(path: str, readonly: bool = False):
             "journal_mode": "wal",
             "synchronous": 1,  # normal
             "cache_size": -64 * 1000,  # 64MB page cache
+            "wal_autocheckpoint": 8000,  # 8000 page size
         },
     )
     db.initialize(database)
