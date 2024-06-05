@@ -1,6 +1,8 @@
+import sys
 from pathlib import Path
 
 import click
+from loguru import logger
 
 click_db_dir = click.option(
     "-d",
@@ -14,4 +16,8 @@ click_db_dir = click.option(
 
 @click.group()
 def cli():
-    pass
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
+    )

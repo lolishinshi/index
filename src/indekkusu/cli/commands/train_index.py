@@ -2,8 +2,9 @@ from pathlib import Path
 
 import click
 from loguru import logger
+
+from indekkusu.database import connect, crud
 from indekkusu.index.train import FaissIndexTrainer
-from indekkusu.database import crud, connect
 
 from .base import cli, click_db_dir
 

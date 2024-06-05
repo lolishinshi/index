@@ -1,10 +1,11 @@
+from collections import Counter, defaultdict
 from pathlib import Path
-from collections import defaultdict, Counter
 
 import click
 from loguru import logger
+
+from indekkusu.database import connect, crud
 from indekkusu.index.train import FaissIndexTrainer
-from indekkusu.database import crud, connect
 
 from .base import cli, click_db_dir
 
@@ -45,4 +46,3 @@ def build_index(db_dir: Path):
     # 第三步，筛选特征点重复度高的图片
     logger.info("筛选特征点重复度高的图片中")
     counter = Counter(v for values in m.values() for v in values)
-    

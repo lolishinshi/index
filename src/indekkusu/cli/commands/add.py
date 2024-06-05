@@ -51,6 +51,7 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
 
     t2.join()
 
+
 class InputImage:
     def __init__(self, path: Path):
         self.path = path

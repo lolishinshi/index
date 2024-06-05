@@ -9,6 +9,7 @@ def create(hash: bytes, path: str) -> int:
     """
     return Image.create(hash=hash, path=path).id
 
+
 def check_hash(hash: bytes) -> bool:
     """
     检查图片是否已存在

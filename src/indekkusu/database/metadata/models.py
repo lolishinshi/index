@@ -1,4 +1,4 @@
-from peewee import AutoField, BlobField, CharField, BigIntegerField
+from peewee import AutoField, BigIntegerField, BlobField, CharField
 
 from .base import db
 
