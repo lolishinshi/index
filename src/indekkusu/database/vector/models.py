@@ -7,13 +7,11 @@ from .base import db
 
 
 class NDArrayField(BlobField):
-    def db_value(self, value):
-        with io.BytesIO() as f:
-            np.save(f, value, allow_pickle=False)
-            return f.getvalue()
+    def db_value(self, value: np.ndarray):
+        return value.tobytes()
 
-    def python_value(self, value):
-        return np.load(io.BytesIO(value), allow_pickle=False)
+    def python_value(self, value: bytes):
+        return np.frombuffer(value, dtype=np.uint8)
 
 
 class Vector(db.Model):

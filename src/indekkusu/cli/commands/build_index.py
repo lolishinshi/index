@@ -1,48 +1,43 @@
-from collections import Counter, defaultdict
 from pathlib import Path
+from typing import Generator
 
+import numpy as np
 import click
 from loguru import logger
 
 from indekkusu.database import connect, crud
-from indekkusu.index.train import FaissIndexTrainer
 
 from .base import cli, click_db_dir
 
 
 @cli.command()
 @click_db_dir
-@click.option("--gpu", is_flag=True, help="使用 GPU 训练索引")
-def build_index(db_dir: Path):
+@click.option("-i", "--index-id", default=0, show_default=True, help="索引 ID")
+@click.option("-n", "--num", help="限制添加的图片数量")
+@click.option(
+    "-c", "--chunk", default=1000, show_default=True, help="每批添加多少张图片到索引中"
+)
+def build_index(db_dir: Path, index_id: int, num: int | None, chunk: int):
     """
     构建索引
     """
     connect(str(db_dir))
 
-    # 第一步，遍历所有向量，找出重复的向量
-    logger.info("查找重复向量中")
-    d = set()
-    h = set()
-    for vector in crud.vector.iter_by(0, 100000000):
-        for v in vector.vector:
-            hash = bytes(v)
-            if hash in h:
-                d.add(hash)
-            else:
-                h.add(hash)
-    del h
+    id_start = crud.image.get_indexed() + 1
 
-    # 第二步，找出重复的向量对应的图片
-    logger.info("查找重复向量对应的图片中")
-    g = set()
-    m = defaultdict(list)
-    for vector in crud.vector.iter_by(0, 100000000):
-        for v in vector.vector:
-            hash = bytes(v)
-            if hash in d:
-                m[hash].append(vector.id)
-                g.add(vector.id)
+    for chunk in chunk_index(id_start, num, chunk):
+        logger.info("Adding {} vectors to index", len(chunk))
+        pass
 
-    # 第三步，筛选特征点重复度高的图片
-    logger.info("筛选特征点重复度高的图片中")
-    counter = Counter(v for values in m.values() for v in values)
+
+def chunk_index(
+    start: int, limit: int | None, chunk_size: int
+) -> Generator[np.ndarray, None, None]:
+    cache = []
+    for v in crud.vector.iter_by(start, limit):
+        cache.append(v.vector)
+        if len(cache) == chunk_size:
+            yield np.concatenate(cache)
+            cache.clear()
+    if cache:
+        yield np.concatenate(cache)

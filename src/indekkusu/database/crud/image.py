@@ -1,6 +1,4 @@
-from blake3 import blake3
-
-from ..metadata import Image, VectorNumber
+from ..metadata import Image, IndexStatus, VectorNumber
 
 
 def create(hash: bytes, path: str) -> int:
@@ -29,3 +27,17 @@ def add_vector_num(image_id: int, vector_num: int):
     记录特征点数量
     """
     VectorNumber.create(id=image_id, num=vector_num)
+
+
+def get_indexed() -> int:
+    """
+    返回最后一个索引的 ID
+    """
+    return IndexStatus.select().get().indexed
+
+
+def set_indexed(indexed: int):
+    """
+    设置最后一个索引的 ID
+    """
+    IndexStatus.update(indexed=indexed).execute()

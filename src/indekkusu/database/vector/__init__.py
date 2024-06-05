@@ -6,9 +6,9 @@ from .models import Vector
 __all__ = ["Vector", "connect"]
 
 
-def connect(path: str):
+def connect(path: str, readonly: bool = False):
     database = SqliteQueueDatabase(
-        path,
+        f"file:{path}?mode=ro" if readonly else path,
         timeout=5,
         pragmas={
             "journal_mode": "wal",

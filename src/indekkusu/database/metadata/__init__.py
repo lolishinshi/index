@@ -1,14 +1,14 @@
 from playhouse.sqliteq import SqliteQueueDatabase
 
 from .base import db
-from .models import Image, VectorNumber
+from .models import Image, IndexStatus, VectorNumber
 
 __all__ = ["Image", "connect"]
 
 
-def connect(path: str):
+def connect(path: str, readonly: bool = False):
     database = SqliteQueueDatabase(
-        path,
+        f"file:{path}?mode=ro" if readonly else path,
         timeout=5,
         pragmas={
             "journal_mode": "wal",
@@ -16,4 +16,4 @@ def connect(path: str):
         },
     )
     db.initialize(database)
-    database.create_tables([Image, VectorNumber])
+    database.create_tables([Image, VectorNumber, IndexStatus])

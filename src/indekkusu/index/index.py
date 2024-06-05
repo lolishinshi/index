@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import faiss
 import numpy as np
 from loguru import logger
@@ -24,10 +26,35 @@ class FaissIndex:
         tot = np.sum(arr).astype(np.float64)
         return float(uf * len(arr) / tot**2)
 
-    def add(self, key: int, vectors: np.ndarray):
+    def add(self, vectors: np.ndarray):
         """
         添加图片的特征点向量
         """
+        self.index.add(vectors)
+
+    def search(
+        self,
+        vectors: np.ndarray,
+        k: int,
+        nprobe: int = 1,
+        max_codes: int = 0,
+        efSearch: int = 16,
+    ) -> np.ndarray:
+        """
+        搜索最近的向量
+        """
+        params = faiss.SearchParametersIVF(
+            nprobe=nprobe,
+            max_codes=max_codes,
+            quantizer_params=faiss.SearchParametersHNSW(efSearch=efSearch),
+        )
+        return self.index.search(vectors, k, params=params)
+
+    def save(self):
+        """
+        保存索引
+        """
+        faiss.write_index_binary(self.index, self.path)
 
 
 # https://www.jianshu.com/p/4d2b45918958

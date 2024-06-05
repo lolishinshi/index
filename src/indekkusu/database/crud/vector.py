@@ -15,14 +15,15 @@ def create(key: int, vector: np.ndarray) -> None:
     Vector.create(id=key, vector=vector)
 
 
-def iter_by(start: int, end: int) -> Generator[Vector, None, None]:
+def iter_by(start: int, limit: int | None = None) -> Generator[Vector, None, None]:
     """
     遍历 [start, end) 的向量记录
     """
     return (
         Vector.select()
-        .where(Vector.id >= start, Vector.id < end)
+        .where(Vector.id >= start)
         .order_by(Vector.id)
+        .limit(limit)
         .iterator()
     )
 

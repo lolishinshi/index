@@ -12,3 +12,7 @@ class Image(db.Model):
 class VectorNumber(db.Model):
     id = AutoField()
     num = BigIntegerField(index=True)
+
+
+class IndexStatus(db.Model):
+    indexed = BigIntegerField(default=0)
