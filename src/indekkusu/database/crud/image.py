@@ -1,6 +1,6 @@
 from blake3 import blake3
 
-from ..metadata import Image
+from ..metadata import Image, VectorNumber
 
 
 def create(path: str) -> int | None:
@@ -23,3 +23,10 @@ def get_by_id(image_id: int) -> Image:
     通过ID查询图片
     """
     return Image.get_by_id(image_id)
+
+
+def add_vector_num(image_id: int, vector_num: int):
+    """
+    记录特征点数量
+    """
+    VectorNumber.create(id=image_id, num=vector_num)

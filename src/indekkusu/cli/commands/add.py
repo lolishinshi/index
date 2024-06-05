@@ -94,4 +94,5 @@ def write_thread(output: Queue, threads: int, total: int):
                 exit_threads += 1
             else:
                 crud.vector.create(key, des)
+                crud.image.add_vector_num(key, len(des))
                 bar.update()

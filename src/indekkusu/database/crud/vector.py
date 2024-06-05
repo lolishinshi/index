@@ -21,8 +21,8 @@ def iter_by(start: int, end: int) -> Generator[Vector, None, None]:
     """
     return (
         Vector.select()
-        .where(Vector.key >= start, Vector.key < end)
-        .order_by(Vector.key)
+        .where(Vector.id >= start, Vector.id < end)
+        .order_by(Vector.id)
         .iterator()
     )
 

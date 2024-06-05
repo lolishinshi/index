@@ -9,6 +9,6 @@ class Image(db.Model):
     path = CharField()
 
 
-class TotalVector(db.Model):
+class VectorNumber(db.Model):
     id = AutoField()
-    total = BigIntegerField(index=True)
+    num = BigIntegerField(index=True)
