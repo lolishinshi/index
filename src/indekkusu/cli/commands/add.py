@@ -5,6 +5,7 @@ from pathlib import Path
 from threading import Thread
 from typing import Iterator
 
+import blake3
 import click
 import numpy as np
 from loguru import logger
@@ -50,49 +51,70 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
 
     t2.join()
 
+class InputImage:
+    def __init__(self, path: Path):
+        self.path = path
+        self.data = path.read_bytes()
+        self.des = None
+        self._hash = None
+
+    @property
+    def hash(self):
+        if self._hash is None:
+            self._hash = blake3.blake3(self.data).digest()
+        return self._hash
+
 
 def calc_process(input: Queue, output: Queue):
     ft = FeatureExtractor()
 
     while True:
         try:
-            key, image = input.get(timeout=1)
-            if key == -1:
+            img: InputImage | None = input.get(timeout=1)
+            if img is None:
                 break
 
-            img = load_image(image)
-            if img is None:
-                logger.warning("无法读取图片 {}", image)
+            arr = load_image(img.data)
+            if arr is None:
+                logger.warning("无法读取图片 {}", img.path)
                 continue
 
-            _, des = ft.detect_and_compute(img)
+            _, des = ft.detect_and_compute(arr)
             if len(des) == 0:
-                logger.warning("无法提取特征点 {}", image)
+                logger.warning("无法提取特征点 {}", img.path)
+                continue
+            if len(des) < 500:
+                logger.warning("特征点数量过少 {}", img.path)
                 continue
 
-            output.put((key, des))
+            img.des = des
+
+            output.put(img)
         except queue.Empty:
             continue
 
-    output.put((-1, np.array([])))
+    output.put(None)
 
 
 def feed_thread(input: Queue, images: Iterator[Path], threads: int):
     for image in images:
-        if key := crud.image.create(str(image)):
-            input.put((key, image))
+        img = InputImage(image)
+        if crud.image.check_hash(img.hash):
+            continue
+        input.put(img)
     for _ in range(threads):
-        input.put((-1, Path()))
+        input.put(None)
 
 
 def write_thread(output: Queue, threads: int, total: int):
     exit_threads = 0
     with tqdm(total=total) as bar:
         while exit_threads != threads:
-            key, des = output.get()
-            if key == -1:
+            img: InputImage | None = output.get()
+            if img is None:
                 exit_threads += 1
             else:
-                crud.vector.create(key, des)
-                crud.image.add_vector_num(key, len(des))
+                key = crud.image.create(img.hash, str(img.path))
+                crud.vector.create(key, img.des)
+                crud.image.add_vector_num(key, len(img.des))
                 bar.update()

@@ -3,19 +3,17 @@ from blake3 import blake3
 from ..metadata import Image, VectorNumber
 
 
-def create(path: str) -> int | None:
+def create(hash: bytes, path: str) -> int:
     """
     记录图片路径，返回其 id
-    如果图片已存在则返回 None
     """
-    with open(path, "rb") as f:
-        hash = blake3(f.read()).digest()
-    image = Image.get_or_none(Image.hash == hash)
-    if image is None:
-        image = Image.create(hash=hash, path=path)
-        return image.id
-    else:
-        return None
+    return Image.create(hash=hash, path=path).id
+
+def check_hash(hash: bytes) -> bool:
+    """
+    检查图片是否已存在
+    """
+    return Image.get_or_none(Image.hash == hash) is not None
 
 
 def get_by_id(image_id: int) -> Image:

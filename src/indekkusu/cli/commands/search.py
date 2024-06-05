@@ -18,3 +18,5 @@ def search(image: str, db_dir: Path, limit: int):
     _, desc = FeatureExtractor().detect_and_compute(img)
     for score, image in db.search_image(desc, limit):
         print(score, image)
+    # 注：如果某张图片中含有大量重复图形，可能会导致提取出多个相似的特征点
+    # 如果恰好有图片也有这个特征，那么这个垃圾图片的得分会很高，应该限制一个特征点的匹配结果中，每张图片只能出现一次
