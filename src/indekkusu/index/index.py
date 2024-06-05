@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import faiss
@@ -55,6 +56,19 @@ class FaissIndex:
         保存索引
         """
         faiss.write_index_binary(self.index, self.path)
+
+
+class FaissManager:
+    def __init__(self, db_dir: Path, description: str):
+        self.db_dir = db_dir
+        self.description = description
+
+    def get_index(self, index_name: str, mmap: bool = False) -> FaissIndex:
+        index_path = self.db_dir / f"{self.description}.index.{index_name}"
+        trained_path = self.db_dir / f"{self.description}.trained"
+        if not index_path.exists():
+            shutil.copy(trained_path, index_path)
+        return FaissIndex(str(index_path), mmap)
 
 
 # https://www.jianshu.com/p/4d2b45918958
