@@ -1,13 +1,12 @@
 import itertools
 import queue
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 from pathlib import Path
 from threading import Thread
 from typing import Iterator
 
 import blake3
 import click
-import numpy as np
 from loguru import logger
 from tqdm import tqdm
 
@@ -40,9 +39,10 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
 
     input = Queue(maxsize=threads * 2)
     output = Queue()
+    status = CalcStatus()
 
     for _ in range(threads):
-        Process(target=calc_process, args=(input, output)).start()
+        Process(target=calc_process, args=(input, output, status)).start()
 
     t1 = Thread(target=feed_thread, args=(input, images, threads))
     t2 = Thread(target=write_thread, args=(output, threads, total))
@@ -50,6 +50,19 @@ def add(db_dir: Path, path: Path, glob: list[str], threads: int):
     t2.start()
 
     t2.join()
+
+    logger.info("总共处理图片：{}", status.total.value)
+    logger.info("读取失败图片：{}", status.fail_read.value)
+    logger.info("特征点提取失败图片：{}", status.fail_detect.value)
+    logger.info("特征点数量过少图片：{}", status.fail_less.value)
+
+
+class CalcStatus:
+    def __init__(self) -> None:
+        self.total = Value("i", 0)
+        self.fail_read = Value("i", 0)
+        self.fail_detect = Value("i", 0)
+        self.fail_less = Value("i", 0)
 
 
 class InputImage:
@@ -66,7 +79,7 @@ class InputImage:
         return self._hash
 
 
-def calc_process(input: Queue, output: Queue):
+def calc_process(input: Queue, output: Queue, status: CalcStatus):
     ft = FeatureExtractor()
 
     while True:
@@ -75,16 +88,21 @@ def calc_process(input: Queue, output: Queue):
             if img is None:
                 break
 
+            status.total.value += 1
+
             arr = load_image(img.data)
             if arr is None:
+                status.fail_read.value += 1
                 logger.warning("无法读取图片 {}", img.path)
                 continue
 
             _, des = ft.detect_and_compute(arr)
             if len(des) == 0:
+                status.fail_detect.value += 1
                 logger.warning("无法提取特征点 {}", img.path)
                 continue
             if len(des) < 500:
+                status.fail_less.value += 1
                 logger.warning("特征点数量过少 {}", img.path)
                 continue
 
