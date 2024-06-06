@@ -1,6 +1,7 @@
+import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Generator
+from queue import Queue
 
 import click
 import numpy as np
@@ -27,7 +28,7 @@ def index():
     "-c", "--chunk", default=50000, show_default=True, help="每批添加多少张图片到索引中"
 )
 @click.option("-n", "--name", help="索引名称", required=True)
-@click.option("-d", "--description", help="索引描述", required=True)
+@click.option("--description", help="索引描述", required=True)
 @click.option(
     "-i", "--interval", default=60, show_default=True, help="保存索引的间隔，单位秒"
 )
@@ -49,9 +50,19 @@ def build(
     id_start = crud.image.get_indexed(name) + 1
     logger.info("开始添加图片到索引，起始 ID: {}", id_start)
 
+    queue = Queue(1)
     start = datetime.now()
 
-    for ilist, vlist in chunk_index(id_start, limit, chunk):
+    chunk_thread = threading.Thread(
+        target=chunk_index, args=(id_start, limit, chunk, queue)
+    )
+    chunk_thread.start()
+
+    while True:
+        ilist, vlist = queue.get()
+        if ilist is None:
+            break
+
         logger.info("正在增加 {} 张图片", len(vlist))
         xids = np.concatenate(ilist)
         vectors = np.concatenate(vlist)
@@ -68,20 +79,19 @@ def build(
     crud.image.add_indexed(name, len(vlist))
 
 
-def chunk_index(
-    start: int, limit: int | None, chunk_size: int
-) -> Generator[tuple[list[np.ndarray], list[np.ndarray]], None, None]:
+def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
     xids = []
     vectors = []
     for v in crud.vector.iter_by(start, limit):
         xids.append(v.id << 10 | np.arange(v.vector.shape[0], dtype=np.uint64))
         vectors.append(v.vector)
         if len(vectors) == chunk_size:
-            yield xids, vectors
+            queue.put((xids, vectors))
             xids.clear()
             vectors.clear()
     if vectors:
-        yield xids, vectors
+        queue.put((xids, vectors))
+    queue.put((None, None))
 
 
 @index.command()
