@@ -26,10 +26,9 @@ def get_indexed(name: str) -> int:
     """
     返回已索引的图片数量
     """
-    if v := IndexStatus.select(IndexStatus.name == name).get_or_none():
+    if v := IndexStatus.select().where(IndexStatus.name == name).get_or_none():
         return v.indexed
-    IndexStatus.create(name=name, indexed=0)
-    return 0
+    return IndexStatus.create(name=name, indexed=0).indexed
 
 
 def add_indexed(name: str, add: int):
