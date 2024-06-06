@@ -32,4 +32,6 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "prettytable>=3.10.0",
+    "aiogram>=3.7.0",
+    "aiohttp>=3.9.5",
 ]

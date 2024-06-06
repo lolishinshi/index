@@ -62,7 +62,7 @@ def build(
         r = queue.get()
         if r is None:
             break
-    
+
         ilist, vlist = r
         logger.info("正在增加 {} 张图片", len(vlist))
         xids = np.concatenate(ilist)
