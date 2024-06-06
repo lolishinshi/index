@@ -4,3 +4,4 @@ from .detect import detect
 from .index import index
 from .match import match
 from .search import search
+from .server import server

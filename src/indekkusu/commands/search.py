@@ -1,12 +1,14 @@
+from datetime import datetime
 from pathlib import Path
 
 import click
+from loguru import logger
 
+from indekkusu.database import connect, crud
 from indekkusu.feature import FeatureExtractor
-from indekkusu.database import connect
 from indekkusu.index import FaissIndexManager
+from indekkusu.utils import load_image
 
-from ..utils import load_image
 from .base import cli, click_db_dir
 
 
@@ -29,6 +31,13 @@ def search(db_dir: Path, image: str, name: str, limit: int, mmap: bool):
     _, desc = FeatureExtractor().detect_and_compute(img)
 
     result = index.search(desc, limit)
-    print(result)
-    # 注：如果某张图片中含有大量重复图形，可能会导致提取出多个相似的特征点
-    # 如果恰好有图片也有这个特征，那么这个垃圾图片的得分会很高，应该限制一个特征点的匹配结果中，每张图片只能出现一次
+    for k, v in result.__dict__.items():
+        if k != "result":
+            logger.debug("{}: {}", k, v)
+
+    now = datetime.now()
+    images = [(score, crud.image.get_by_id(id_).path) for id_, score in result.result]
+    logger.debug("db_time: {}", (datetime.now() - now).total_seconds() * 100)
+
+    for score, path in images:
+        logger.info("{:.2f} | {}", score, path)

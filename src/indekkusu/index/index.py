@@ -1,8 +1,8 @@
 import shutil
-from pathlib import Path
 from collections import defaultdict
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
 import faiss
 import numpy as np
@@ -11,8 +11,13 @@ from loguru import logger
 
 @dataclass
 class FaissSearchResult:
-    time: float
-    knn_time: float
+    nq: int
+    nlist: int
+    ndis: int
+    nheap_updates: int
+    quantization_time: float
+    search_time: float
+    filter_time: float
     result: list[tuple[int, float]]
 
 
@@ -47,7 +52,7 @@ class FaissIndex:
         self,
         vectors: np.ndarray,
         limit: int = 10,
-        k: int = 10,
+        k: int = 3,
         nprobe: int = 1,
         max_codes: int = 0,
         efSearch: int = 16,
@@ -55,16 +60,11 @@ class FaissIndex:
         """
         搜索最近的特征点，返回图片 ID 和距离
         """
-        now = datetime.now()
-        params = faiss.SearchParametersIVF(
-            nprobe=nprobe,
-            max_codes=max_codes,
-            quantizer_params=faiss.SearchParametersHNSW(efSearch=efSearch),
-        )
-        # TODO: 为什么不能设置 params
+        self.index.nprobe = nprobe
+        self.index.max_codes = max_codes
         distances, labels = self.index.search(vectors, k)
-        knn_time = datetime.now() - now
 
+        now = datetime.now()
         labels >>= 10
         kds = defaultdict(list)
         for label, distance in zip(labels, distances):
@@ -82,10 +82,16 @@ class FaissIndex:
             key=lambda x: x[1],
             reverse=True,
         )
+        filter_time = (datetime.now() - now).total_seconds()
 
         return FaissSearchResult(
-            time=(datetime.now() - now).total_seconds(),
-            knn_time=knn_time.total_seconds(),
+            nq=faiss.cvar.indexIVF_stats.nq,
+            nlist=faiss.cvar.indexIVF_stats.nlist,
+            ndis=faiss.cvar.indexIVF_stats.ndis,
+            nheap_updates=faiss.cvar.indexIVF_stats.nheap_updates,
+            quantization_time=faiss.cvar.indexIVF_stats.quantization_time,
+            search_time=faiss.cvar.indexIVF_stats.search_time,
+            filter_time=filter_time * 100,
             result=kws[:limit],
         )
 
