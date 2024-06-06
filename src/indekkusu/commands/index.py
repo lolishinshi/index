@@ -21,6 +21,7 @@ def index():
     pass
 
 
+# TODO: chunk 的默认值是否应该能被 cpu 数量整除？
 @index.command()
 @click_db_dir
 @click.option("-l", "--limit", help="限制添加的图片数量")
