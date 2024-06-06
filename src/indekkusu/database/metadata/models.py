@@ -10,7 +10,7 @@ class Image(db.Model):
 
 
 class VectorNumber(db.Model):
-    id = AutoField()
+    id = BigIntegerField()
     num = BigIntegerField(index=True)
 
 

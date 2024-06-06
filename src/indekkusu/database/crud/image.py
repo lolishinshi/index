@@ -33,11 +33,17 @@ def get_indexed() -> int:
     """
     返回最后一个索引的 ID
     """
-    return IndexStatus.select().get().indexed
+    if v := IndexStatus.select().get_or_none():
+        return v.indexed
+    return 0
 
 
-def set_indexed(indexed: int):
+def add_indexed(add: int):
     """
     设置最后一个索引的 ID
     """
-    IndexStatus.update(indexed=indexed).execute()
+    if v := IndexStatus.select().get_or_none():
+        v.indexed += add
+        v.save()
+    else:
+        IndexStatus.create(indexed=add)

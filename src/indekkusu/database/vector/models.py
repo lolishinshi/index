@@ -11,7 +11,7 @@ class NDArrayField(BlobField):
         return value.tobytes()
 
     def python_value(self, value: bytes):
-        return np.frombuffer(value, dtype=np.uint8)
+        return np.frombuffer(value, dtype=np.uint8).reshape(-1, 32)
 
 
 class Vector(db.Model):

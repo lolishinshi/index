@@ -55,17 +55,18 @@ class FaissIndex:
         """
         保存索引
         """
-        faiss.write_index_binary(self.index, self.path)
+        faiss.write_index_binary(self.index, self.path + ".tmp")
+        shutil.move(self.path + ".tmp", self.path)
 
 
-class FaissManager:
+class FaissIndexManager:
     def __init__(self, db_dir: Path, description: str):
         self.db_dir = db_dir
         self.description = description
 
     def get_index(self, index_name: str, mmap: bool = False) -> FaissIndex:
         index_path = self.db_dir / f"{self.description}.index.{index_name}"
-        trained_path = self.db_dir / f"{self.description}.trained"
+        trained_path = self.db_dir / f"{self.description}.train"
         if not index_path.exists():
             shutil.copy(trained_path, index_path)
         return FaissIndex(str(index_path), mmap)
