@@ -10,4 +10,5 @@ class Image(db.Model):
 
 
 class IndexStatus(db.Model):
+    name = CharField(primary_key=True)
     indexed = BigIntegerField(default=0)

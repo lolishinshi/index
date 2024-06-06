@@ -14,16 +14,15 @@ from .base import cli, click_db_dir
 @click_db_dir
 @click.option("-l", "--limit", default=10, show_default=True, help="返回结果数量")
 @click.option("-n", "--name", required=True, help="索引文件名称")
-@click.option("-d", "--description", required=True, help="索引描述")
 @click.option("--mmap", is_flag=True, help="使用 mmap 加载索引")
 @click.argument("image", type=click.Path(exists=True))
-def search(db_dir: Path, image: str, description: str, name: str, limit: int, mmap: bool):
+def search(db_dir: Path, image: str, name: str, limit: int, mmap: bool):
     """
     搜索图片
     """
-    connect(db_dir, readonly=True)
+    connect(str(db_dir))
 
-    m = FaissIndexManager(db_dir, description)
+    m = FaissIndexManager(db_dir)
     index = m.get_index(name, mmap)
 
     img = load_image(image)

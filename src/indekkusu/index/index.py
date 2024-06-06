@@ -1,10 +1,19 @@
 import shutil
 from pathlib import Path
 from collections import defaultdict
+from datetime import datetime
+from dataclasses import dataclass
 
 import faiss
 import numpy as np
 from loguru import logger
+
+
+@dataclass
+class FaissSearchResult:
+    time: float
+    knn_time: float
+    result: list[tuple[int, float]]
 
 
 class FaissIndex:
@@ -37,14 +46,16 @@ class FaissIndex:
     def search(
         self,
         vectors: np.ndarray,
-        k: int,
+        limit: int = 10,
+        k: int = 10,
         nprobe: int = 1,
         max_codes: int = 0,
         efSearch: int = 16,
-    ) -> dict[int, float]:
+    ) -> FaissSearchResult:
         """
         搜索最近的特征点，返回图片 ID 和距离
         """
+        now = datetime.now()
         params = faiss.SearchParametersIVF(
             nprobe=nprobe,
             max_codes=max_codes,
@@ -52,18 +63,31 @@ class FaissIndex:
         )
         # TODO: 为什么不能设置 params
         distances, labels = self.index.search(vectors, k)
+        knn_time = datetime.now() - now
 
         labels >>= 10
-        result = defaultdict(list)
+        kds = defaultdict(list)
         for label, distance in zip(labels, distances):
-            t = defaultdict(lambda: 256)
             # 如果某个特征点匹配到了同一图片中的多个特征点，只取最接近的一个
+            t = defaultdict(lambda: 256)
             for l, d in zip(label, distance):
                 t[l] = min(t[l], d)
             for l, d in t.items():
-                result[l].append(d)
+                kds[l].append(d)
 
-        return {k: wilson_score(np.array(v)) for k, v in result.items()}
+        # 此处先按长度截取前 2 * limit 个，减少计算量
+        kls = sorted(kds.items(), key=lambda x: len(x[1]), reverse=True)
+        kws = sorted(
+            [(k, wilson_score(np.array(v))) for k, v in kls[: 2 * limit]],
+            key=lambda x: x[1],
+            reverse=True,
+        )
+
+        return FaissSearchResult(
+            time=(datetime.now() - now).total_seconds(),
+            knn_time=knn_time.total_seconds(),
+            result=kws[:limit],
+        )
 
     def save(self):
         """
@@ -74,15 +98,21 @@ class FaissIndex:
 
 
 class FaissIndexManager:
-    def __init__(self, db_dir: Path, description: str):
+    def __init__(self, db_dir: Path, description: str | None = None):
         self.db_dir = db_dir
         self.description = description
 
     def get_index(self, index_name: str, mmap: bool = False) -> FaissIndex:
-        index_path = self.db_dir / f"{self.description}.index.{index_name}"
         trained_path = self.db_dir / f"{self.description}.train"
-        if not index_path.exists():
+
+        if any(self.db_dir.glob(f"*.index.{index_name}")):
+            index_path = next(self.db_dir.glob(f"*.index.{index_name}"))
+        elif (self.db_dir / f"{self.description}.train").exists():
+            index_path = self.db_dir / f"{self.description}.index.{index_name}"
             shutil.copy(trained_path, index_path)
+        else:
+            raise FileNotFoundError(f"索引文件 {index_name} 不存在")
+
         return FaissIndex(str(index_path), mmap)
 
 

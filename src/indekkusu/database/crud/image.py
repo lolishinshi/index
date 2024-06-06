@@ -22,21 +22,20 @@ def get_by_id(image_id: int) -> Image:
     return Image.get_by_id(image_id)
 
 
-def get_indexed() -> int:
+def get_indexed(name: str) -> int:
     """
-    返回最后一个索引的 ID
+    返回已索引的图片数量
     """
-    if v := IndexStatus.select().get_or_none():
+    if v := IndexStatus.select(IndexStatus.name == name).get_or_none():
         return v.indexed
-    return -1
+    IndexStatus.create(name=name, indexed=0)
+    return 0
 
 
-def add_indexed(add: int):
+def add_indexed(name: str, add: int):
     """
-    设置最后一个索引的 ID
+    将已索引的图片数量增加 add
     """
-    if v := IndexStatus.select().get_or_none():
-        v.indexed += add
-        v.save()
-    else:
-        IndexStatus.create(indexed=add)
+    IndexStatus.update(indexed=IndexStatus.indexed + add).where(
+        IndexStatus.name == name
+    ).execute()

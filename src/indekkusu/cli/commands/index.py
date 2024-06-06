@@ -46,7 +46,7 @@ def build(
     m = FaissIndexManager(db_dir, description)
     index = m.get_index(name)
 
-    id_start = crud.image.get_indexed() + 1
+    id_start = crud.image.get_indexed(name) + 1
     logger.info("开始添加图片到索引，起始 ID: {}", id_start)
 
     start = datetime.now()
@@ -56,17 +56,16 @@ def build(
         xids = np.concatenate(ilist)
         vectors = np.concatenate(vlist)
         index.add_with_ids(vectors, xids)
-        logger.info("不平衡度: {}", index.imbalance())
 
         if (datetime.now() - start).seconds > interval:
+            logger.info("不平衡度: {}", index.imbalance())
             logger.info("保存索引")
+            index.save()
+            crud.image.add_indexed(name, len(vlist))
             start = datetime.now()
 
-            index.save()
-            crud.image.add_indexed(len(vlist))
-
     index.save()
-    crud.image.add_indexed(len(vlist))
+    crud.image.add_indexed(name, len(vlist))
 
 
 def chunk_index(
