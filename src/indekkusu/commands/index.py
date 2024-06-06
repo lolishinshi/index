@@ -59,10 +59,11 @@ def build(
     chunk_thread.start()
 
     while True:
-        ilist, vlist = queue.get()
-        if ilist is None:
+        r = queue.get()
+        if r is None:
             break
-
+    
+        ilist, vlist = r
         logger.info("正在增加 {} 张图片", len(vlist))
         xids = np.concatenate(ilist)
         vectors = np.concatenate(vlist)
@@ -74,9 +75,11 @@ def build(
             index.save()
             crud.image.add_indexed(name, len(vlist))
             start = datetime.now()
+            vlist = []
 
-    index.save()
-    crud.image.add_indexed(name, len(vlist))
+    if vlist:
+        index.save()
+        crud.image.add_indexed(name, len(vlist))
 
 
 def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
@@ -91,7 +94,7 @@ def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
             vectors = []
     if vectors:
         queue.put((xids, vectors))
-    queue.put((None, None))
+    queue.put(None)
 
 
 @index.command()
