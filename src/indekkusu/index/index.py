@@ -21,6 +21,7 @@ class FaissSearchResult:
     result: list[tuple[int, float]]
 
 
+# TODO: 阻止并发访问
 class FaissIndex:
     def __init__(self, path: str, mmap: bool = False):
         """
@@ -84,7 +85,7 @@ class FaissIndex:
         )
         filter_time = (datetime.now() - now).total_seconds()
 
-        return FaissSearchResult(
+        result = FaissSearchResult(
             nq=faiss.cvar.indexIVF_stats.nq,
             nlist=faiss.cvar.indexIVF_stats.nlist,
             ndis=faiss.cvar.indexIVF_stats.ndis,
@@ -94,6 +95,8 @@ class FaissIndex:
             filter_time=filter_time * 100,
             result=kws[:limit],
         )
+        faiss.cvar.indexIVF_stats.reset()
+        return result
 
     def save(self):
         """
