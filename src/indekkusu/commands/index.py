@@ -87,8 +87,8 @@ def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
         vectors.append(v.vector)
         if len(vectors) == chunk_size:
             queue.put((xids, vectors))
-            xids.clear()
-            vectors.clear()
+            xids = []
+            vectors = []
     if vectors:
         queue.put((xids, vectors))
     queue.put((None, None))
