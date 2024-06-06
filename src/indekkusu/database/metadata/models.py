@@ -9,10 +9,5 @@ class Image(db.Model):
     path = CharField()
 
 
-class VectorNumber(db.Model):
-    id = BigIntegerField()
-    num = BigIntegerField(index=True)
-
-
 class IndexStatus(db.Model):
     indexed = BigIntegerField(default=0)

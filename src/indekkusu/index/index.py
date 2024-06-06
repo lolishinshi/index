@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from collections import defaultdict
 
 import faiss
 import numpy as np
@@ -27,11 +28,11 @@ class FaissIndex:
         tot = np.sum(arr).astype(np.float64)
         return float(uf * len(arr) / tot**2)
 
-    def add(self, vectors: np.ndarray):
+    def add_with_ids(self, vectors: np.ndarray, xids: np.ndarray):
         """
         添加图片的特征点向量
         """
-        self.index.add(vectors)
+        self.index.add_with_ids(vectors, xids)
 
     def search(
         self,
@@ -40,16 +41,29 @@ class FaissIndex:
         nprobe: int = 1,
         max_codes: int = 0,
         efSearch: int = 16,
-    ) -> np.ndarray:
+    ) -> dict[int, float]:
         """
-        搜索最近的向量
+        搜索最近的特征点，返回图片 ID 和距离
         """
         params = faiss.SearchParametersIVF(
             nprobe=nprobe,
             max_codes=max_codes,
             quantizer_params=faiss.SearchParametersHNSW(efSearch=efSearch),
         )
-        return self.index.search(vectors, k, params=params)
+        # TODO: 为什么不能设置 params
+        distances, labels = self.index.search(vectors, k)
+
+        labels >>= 10
+        result = defaultdict(list)
+        for label, distance in zip(labels, distances):
+            t = defaultdict(lambda: 256)
+            # 如果某个特征点匹配到了同一图片中的多个特征点，只取最接近的一个
+            for l, d in zip(label, distance):
+                t[l] = min(t[l], d)
+            for l, d in t.items():
+                result[l].append(d)
+
+        return {k: wilson_score(np.array(v)) for k, v in result.items()}
 
     def save(self):
         """
@@ -74,6 +88,7 @@ class FaissIndexManager:
 
 # https://www.jianshu.com/p/4d2b45918958
 def wilson_score(scores: np.ndarray) -> float:
+    scores = 1 - scores / 256
     mean = np.mean(scores)
     var = np.var(scores)
     total = len(scores)

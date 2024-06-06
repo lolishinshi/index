@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
@@ -27,7 +28,17 @@ def index():
 )
 @click.option("-n", "--name", help="索引名称", required=True)
 @click.option("-d", "--description", help="索引描述", required=True)
-def build(db_dir: Path, limit: int | None, chunk: int, description: str, name: str):
+@click.option(
+    "-i", "--interval", default=60, show_default=True, help="保存索引的间隔，单位秒"
+)
+def build(
+    db_dir: Path,
+    limit: int | None,
+    chunk: int,
+    description: str,
+    name: str,
+    interval: int,
+):
     """
     构建索引
     """
@@ -38,26 +49,40 @@ def build(db_dir: Path, limit: int | None, chunk: int, description: str, name: s
     id_start = crud.image.get_indexed() + 1
     logger.info("开始添加图片到索引，起始 ID: {}", id_start)
 
-    for vlist in chunk_index(id_start, limit, chunk):
+    start = datetime.now()
+
+    for ilist, vlist in chunk_index(id_start, limit, chunk):
         logger.info("正在增加 {} 张图片", len(vlist))
-        arr = np.concatenate(vlist)
-        index.add(arr)
-        index.save()
-        crud.image.add_indexed(len(vlist))
+        xids = np.concatenate(ilist)
+        vectors = np.concatenate(vlist)
+        index.add_with_ids(vectors, xids)
         logger.info("不平衡度: {}", index.imbalance())
+
+        if (datetime.now() - start).seconds > interval:
+            logger.info("保存索引")
+            start = datetime.now()
+
+            index.save()
+            crud.image.add_indexed(len(vlist))
+
+    index.save()
+    crud.image.add_indexed(len(vlist))
 
 
 def chunk_index(
     start: int, limit: int | None, chunk_size: int
-) -> Generator[list[np.ndarray], None, None]:
-    cache = []
+) -> Generator[tuple[list[np.ndarray], list[np.ndarray]], None, None]:
+    xids = []
+    vectors = []
     for v in crud.vector.iter_by(start, limit):
-        cache.append(v.vector)
-        if len(cache) == chunk_size:
-            yield cache
-            cache.clear()
-    if cache:
-        yield cache
+        xids.append(v.id << 10 | np.arange(v.vector.shape[0], dtype=np.uint64))
+        vectors.append(v.vector)
+        if len(vectors) == chunk_size:
+            yield xids, vectors
+            xids.clear()
+            vectors.clear()
+    if vectors:
+        yield xids, vectors
 
 
 @index.command()

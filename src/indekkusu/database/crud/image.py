@@ -1,4 +1,4 @@
-from ..metadata import Image, IndexStatus, VectorNumber
+from ..metadata import Image, IndexStatus
 
 
 def create(hash: bytes, path: str) -> int:
@@ -22,20 +22,13 @@ def get_by_id(image_id: int) -> Image:
     return Image.get_by_id(image_id)
 
 
-def add_vector_num(image_id: int, vector_num: int):
-    """
-    记录特征点数量
-    """
-    VectorNumber.create(id=image_id, num=vector_num)
-
-
 def get_indexed() -> int:
     """
     返回最后一个索引的 ID
     """
     if v := IndexStatus.select().get_or_none():
         return v.indexed
-    return 0
+    return -1
 
 
 def add_indexed(add: int):
