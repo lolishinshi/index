@@ -15,7 +15,6 @@ from indekkusu.utils import load_image
 from .base import cli, click_db_dir
 
 app = FastAPI()
-ft = FeatureExtractor()
 index = None
 
 
@@ -26,7 +25,9 @@ async def search(
     k: int = 3,
     nprobe: int = 1,
     max_codes: int = 0,
+    orb_scale_factor: float = 1.2,
 ):
+    ft = FeatureExtractor(scale_factor=orb_scale_factor)
     img = load_image(file)
     _, des = ft.detect_and_compute(img)
     result = index.search(des, limit, k, nprobe, max_codes)
