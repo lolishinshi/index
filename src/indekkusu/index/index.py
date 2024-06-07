@@ -17,7 +17,6 @@ class FaissSearchResult:
     nheap_updates: int
     quantization_time: float
     search_time: float
-    filter_time: float
     result: list[tuple[int, float]]
 
 
@@ -65,7 +64,6 @@ class FaissIndex:
         self.index.max_codes = max_codes
         distances, labels = self.index.search(vectors, k)
 
-        now = datetime.now()
         labels >>= 10
         kds = defaultdict(list)
         for label, distance in zip(labels, distances):
@@ -83,7 +81,6 @@ class FaissIndex:
             key=lambda x: x[1],
             reverse=True,
         )
-        filter_time = (datetime.now() - now).total_seconds()
 
         result = FaissSearchResult(
             nq=faiss.cvar.indexIVF_stats.nq,
@@ -92,7 +89,6 @@ class FaissIndex:
             nheap_updates=faiss.cvar.indexIVF_stats.nheap_updates,
             quantization_time=faiss.cvar.indexIVF_stats.quantization_time,
             search_time=faiss.cvar.indexIVF_stats.search_time,
-            filter_time=filter_time * 100,
             result=kws[:limit],
         )
         faiss.cvar.indexIVF_stats.reset()

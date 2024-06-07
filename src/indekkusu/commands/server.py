@@ -21,18 +21,30 @@ index = None
 @app.post("/search")
 async def search(
     file: Annotated[bytes, File()],
-    limit: int = 10,
+    limit: int = 5,
     k: int = 3,
-    nprobe: int = 1,
+    nprobe: int = 4,
     max_codes: int = 0,
-    orb_scale_factor: float = 1.2,
+    orb_scale_factor: float | None = None,
 ):
-    ft = FeatureExtractor(scale_factor=orb_scale_factor)
     img = load_image(file)
+    if img is None:
+        return {"error": "图片读取失败"}
+
+    if orb_scale_factor is None:
+        if img.shape[1] <= 400:
+            orb_scale_factor = 0.85
+        else:
+            orb_scale_factor = 1.2
+
+    ft = FeatureExtractor(scale_factor=orb_scale_factor)
     _, des = ft.detect_and_compute(img)
+
+    assert index is not None
+
     result = index.search(des, limit, k, nprobe, max_codes)
-    now = datetime.now()
     images = [(score, crud.image.get_by_id(id_).path) for id_, score in result.result]
+
     return {
         "meta": {
             "nq": result.nq,
@@ -41,8 +53,13 @@ async def search(
             "nheap_updates": result.nheap_updates,
             "quantization_time": round(result.quantization_time, 2),
             "search_time": round(result.search_time, 2),
-            "filter_time": round(result.filter_time, 2),
-            "db_time": round((datetime.now() - now).total_seconds() * 100, 2),
+        },
+        "params": {
+            "limit": limit,
+            "k": k,
+            "nprobe": nprobe,
+            "max_codes": max_codes,
+            "orb_scale_factor": orb_scale_factor,
         },
         "result": images,
     }
