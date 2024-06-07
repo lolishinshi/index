@@ -33,7 +33,7 @@ async def search(
 
     if orb_scale_factor is None:
         if img.shape[1] <= 400:
-            orb_scale_factor = 0.85
+            orb_scale_factor = 0.0
         else:
             orb_scale_factor = 1.2
 
