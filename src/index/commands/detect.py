@@ -2,7 +2,7 @@ import click
 import cv2
 from loguru import logger
 
-from indekkusu.feature import FeatureExtractor
+from index.feature import FeatureExtractor
 
 from ..utils import load_image
 from .base import cli

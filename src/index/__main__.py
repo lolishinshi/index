@@ -1,4 +1,4 @@
-from indekkusu.commands import cli
+from index.commands import cli
 
 if __name__ == "__main__":
     cli()

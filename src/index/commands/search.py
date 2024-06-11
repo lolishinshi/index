@@ -4,10 +4,10 @@ from pathlib import Path
 import click
 from loguru import logger
 
-from indekkusu.database import connect, crud
-from indekkusu.feature import FeatureExtractor
-from indekkusu.index import FaissIndexManager
-from indekkusu.utils import load_image
+from index.database import connect, crud
+from index.feature import FeatureExtractor
+from index.index import FaissIndexManager
+from index.utils import load_image
 
 from .base import cli, click_db_dir
 

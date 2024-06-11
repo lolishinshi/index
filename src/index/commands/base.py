@@ -5,7 +5,6 @@ import click
 from loguru import logger
 
 click_db_dir = click.option(
-    "-d",
     "--db-dir",
     default="index.db",
     type=click.Path(path_type=Path),

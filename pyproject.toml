@@ -1,5 +1,5 @@
 [project]
-name = "indekkusu"
+name = "index"
 version = "0.1.0"
 description = "index and search doujinshi"
 authors = [{ name = "Aloxaf", email = "aloxafx@gmail.com" }]
@@ -11,7 +11,6 @@ dependencies = [
     "blake3>=0.4.1",
     "python-orb-slam3>=0.1.1",
     "peewee>=3.17.5",
-    "faiss-cpu>=1.8.0",
     "packaging>=24.0",  # faiss-cpu 依赖
     "fastapi>=0.111.0",
 ]
@@ -19,19 +18,19 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 
+[project.optional-dependencies]
+cpu = [
+    "faiss-cpu>=1.8.0",
+]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project.scripts]
-indekkusu = "indekkusu.commands:cli"
+index = "index.commands:cli"
 
 [tool.pdm]
 distribution = true
 
 [tool.pdm.dev-dependencies]
-dev = [
-    "prettytable>=3.10.0",
-    "aiogram>=3.7.0",
-    "aiohttp>=3.9.5",
-]
+dev = []

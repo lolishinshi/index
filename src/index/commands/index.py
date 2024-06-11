@@ -7,31 +7,23 @@ import click
 import numpy as np
 from loguru import logger
 
-from indekkusu.database import connect, crud
-from indekkusu.index import FaissIndexManager, FaissIndexTrainer
+from index.database import connect, crud
+from index.index import FaissIndexManager, FaissIndexTrainer
 
 from .base import cli, click_db_dir
 
 
-@cli.group()
-def index():
-    """
-    索引管理
-    """
-    pass
-
-
 # TODO: chunk 的默认值是否应该能被 cpu 数量整除？
-@index.command()
+@cli.command()
 @click_db_dir
 @click.option("-l", "--limit", help="限制添加的图片数量")
 @click.option(
     "-c", "--chunk", default=50000, show_default=True, help="每批添加多少张图片到索引中"
 )
 @click.option("-n", "--name", help="索引名称", required=True)
-@click.option("--description", help="索引描述", required=True)
+@click.option("-d", "--description", help="索引描述", required=True)
 @click.option(
-    "-i", "--interval", default=60, show_default=True, help="保存索引的间隔，单位秒"
+    "-i", "--interval", default=300, show_default=True, help="保存索引的间隔，单位秒"
 )
 def build(
     db_dir: Path,
@@ -98,10 +90,10 @@ def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
     queue.put(None)
 
 
-@index.command()
+@cli.command()
 @click_db_dir
 @click.option(
-    "-i",
+    "-n",
     "--image-num",
     default=10000,
     show_default=True,
@@ -109,13 +101,13 @@ def chunk_index(start: int, limit: int | None, chunk_size: int, queue: Queue):
 )
 @click.option("-d", "--description", help="使用索引描述来创建索引")
 @click.option(
-    "-n", default=50, show_default=True, help="使用多少倍的特征点训练索引，推荐 30~256"
+    "-x", default=50, show_default=True, help="使用多少倍的特征点训练索引，推荐 30~256"
 )
 @click.option("--gpu", is_flag=True, help="使用 GPU 训练索引")
 def train(
     db_dir: Path,
     image_num: int,
-    n: int,
+    x: int,
     gpu: bool,
     description: str | None,
 ):
@@ -126,8 +118,8 @@ def train(
     max_size = image_num * 500
     trainer = FaissIndexTrainer(db_dir, max_size, description)
     logger.info("创建索引 {}", trainer.description)
-    vectors = crud.vector.sample(n * trainer.k // 500)
-    logger.info("采样 {}/{} 向量，开始训练", len(vectors), n * trainer.k)
+    vectors = crud.vector.sample(x * trainer.k // 500)
+    logger.info("采样 {}/{} 向量，开始训练", len(vectors), x * trainer.k)
     if gpu:
         trainer.train_gpu(vectors)
     else:
