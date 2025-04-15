@@ -15,9 +15,17 @@ dependencies = [
     "peewee>=3.17.9",
     "python-orb-slam3>=0.1.1",
     "tqdm>=4.67.1",
+    "uvicorn>=0.34.1",
 ]
 
 [project.optional-dependencies]
 cpu = [
     "faiss-cpu>=1.10.0",
 ]
+
+[project.scripts]
+index = "index.commands:cli"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-import faiss
+try:
+    import faiss
+except ImportError:
+    raise ImportError("请安装 faiss-cpu 或 faiss")
 import numpy as np
 from loguru import logger
 
