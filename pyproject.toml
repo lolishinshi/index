@@ -23,7 +23,6 @@ dependencies = [
 cpu = ["faiss-cpu>=1.10.0"]
 gpu = [
     "faiss-gpu-cu12>=1.10.0",
-    "torch>=2.6.0",
 ]
 
 [project.scripts]
