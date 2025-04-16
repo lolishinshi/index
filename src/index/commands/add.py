@@ -135,5 +135,4 @@ def write_thread(output: Queue, threads: int, total: int):
             else:
                 key = crud.image.create(img.hash, str(img.path))
                 crud.vector.create(key, img.des)
-                crud.image.add_vector_num(key, len(img.des))
                 bar.update()

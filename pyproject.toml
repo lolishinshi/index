@@ -1,36 +1,33 @@
 [project]
 name = "index"
-version = "0.1.0"
+version = "0.2.0"
 description = "index and search doujinshi"
 authors = [{ name = "Aloxaf", email = "aloxafx@gmail.com" }]
-dependencies = [
-    "click>=8.1.7",
-    "opencv-python>=4.9.0.80",
-    "tqdm>=4.66.4",
-    "loguru>=0.7.2",
-    "blake3>=0.4.1",
-    "python-orb-slam3>=0.1.1",
-    "peewee>=3.17.5",
-    "packaging>=24.0",  # faiss-cpu 依赖
-    "fastapi>=0.111.0",
-]
-requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+dependencies = [
+    "blake3>=1.0.4",
+    "click>=8.1.8",
+    "fastapi>=0.115.12",
+    "loguru>=0.7.3",
+    "opencv-python>=4.11.0.86",
+    "peewee>=3.17.9",
+    "python-multipart>=0.0.20",
+    "python-orb-slam3>=0.1.1",
+    "tqdm>=4.67.1",
+    "uvicorn>=0.34.1",
+]
 
 [project.optional-dependencies]
-cpu = [
-    "faiss-cpu>=1.8.0",
+cpu = ["faiss-cpu>=1.10.0"]
+gpu = [
+    "faiss-gpu-cu12>=1.10.0",
 ]
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
 
 [project.scripts]
 index = "index.commands:cli"
 
-[tool.pdm]
-distribution = true
-
-[tool.pdm.dev-dependencies]
-dev = []
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
