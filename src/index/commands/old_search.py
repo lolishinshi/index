@@ -14,6 +14,7 @@ from .base import cli, click_db_dir
 
 @cli.command()
 @click_db_dir
+@click.option("-l", "--limit", default=10, show_default=True, help="返回结果数量")
 @click.option("--mmap", is_flag=True, help="使用 mmap 加载索引")
 @click.argument("image", type=click.Path(exists=True))
 def old_search(db_dir: Path, image: str, limit: int, mmap: bool):
@@ -22,13 +23,16 @@ def old_search(db_dir: Path, image: str, limit: int, mmap: bool):
     """
     m = FaissIndexManager(db_dir)
     index = m.get_old_index(mmap)
+    logger.info("index imbalance: {}", index.imbalance())
 
     img = load_image(image)
     _, desc = FeatureExtractor().detect_and_compute(img)
+    logger.info("desc length: {}", len(desc))
 
     timestamp = datetime.now()
     result = index.search(desc, limit)
     logger.info("search time: {}", (datetime.now() - timestamp).total_seconds() * 1000)
+    logger.info("result count: {}", len(result.result))
     for k, v in result.__dict__.items():
         if k != "result":
             logger.info("{}: {}", k, v)
