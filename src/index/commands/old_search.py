@@ -14,7 +14,6 @@ from .base import cli, click_db_dir
 
 @cli.command()
 @click_db_dir
-@click.option("-n", "--name", required=True, help="索引文件名称")
 @click.option("--mmap", is_flag=True, help="使用 mmap 加载索引")
 @click.argument("image", type=click.Path(exists=True))
 def old_search(db_dir: Path, image: str, limit: int, mmap: bool):
