@@ -119,7 +119,12 @@ class FaissIndexManager:
             raise FileNotFoundError(f"索引文件 {index_name} 不存在")
 
         return FaissIndex(str(index_path), mmap)
-
+    
+    def get_old_index(self, mmap: bool = False) -> FaissIndex:
+        index_path = self.db_dir / "index"
+        if not index_path.exists():
+            raise FileNotFoundError("索引文件不存在")
+        return FaissIndex(str(index_path), mmap)
 
 # https://www.jianshu.com/p/4d2b45918958
 def wilson_score(scores: np.ndarray) -> float:

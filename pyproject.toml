@@ -15,6 +15,7 @@ dependencies = [
     "peewee>=3.17.9",
     "python-multipart>=0.0.20",
     "python-orb-slam3>=0.1.1",
+    "rocksdict>=0.3.25",
     "tqdm>=4.67.1",
     "uvicorn>=0.34.1",
 ]

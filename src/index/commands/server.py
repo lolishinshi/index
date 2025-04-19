@@ -72,6 +72,9 @@ async def search(
 @click.option("--host", default="127.0.0.1", show_default=True, help="绑定的主机地址")
 @click.option("--port", default=8080, show_default=True, help="绑定的端口")
 def server(db_dir: Path, name: str, mmap: bool, host: str, port: int):
+    """
+    启动一个 HTTP 服务，用于搜索图片
+    """
     connect(str(db_dir))
 
     global index
